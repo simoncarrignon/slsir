@@ -15,20 +15,15 @@ names(sir)=c("S","I","R")
 #' @param speed the speed of the agents
 abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10){
     
-    if(is.null(dim(pop))){
-        N=pop
-        pop=cbind(x=runif(N,0,xsize),y=runif(N,0,ysize)) #generate a population 
-        health=rep(S,N) #set all population as Susceptible to be infected
-        infect=sample(N,i0) #choose the first random individuals to be infected
-        health[infect]=I
-        policies=sample(c(G,B),N,replace=T)
-        ages=sample(c(G,B),N,replace=T)
-        pop=cbind(pop,health=health,policies=policies)
-    }
+    if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
+        pop=generatePopulation(N=pop)
+
     N=nrow(pop)
-    timeseries=c()
+
     infect=sample(N,i0) #choose the first random individuals to be infected
     pop[,"health"][infect]=I
+
+    timeseries=c() #table to store output
     for(t in 1:tstep){
         pop[,"x"] = pop[,"x"]+rnorm(N,0,speed)
         pop[,"y"] = pop[,"y"]+rnorm(N,0,speed)
