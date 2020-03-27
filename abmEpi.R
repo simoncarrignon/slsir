@@ -30,6 +30,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
     timeseries=c() #table to store output
     for(t in 1:tstep){
 
+        ##move the agents 
         pop[,"x"] = pop[,"x"]+rnorm(N,0,speed)
         pop[,"y"] = pop[,"y"]+rnorm(N,0,speed)
         pop[,"y"][pop[,"y"]>ysize]=ysize
@@ -37,8 +38,8 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
         pop[,"y"][pop[,"y"]<0]=0
         pop[,"x"][pop[,"x"]<0]=0
         
+        #count effected by agents
         infected=table(pop[,"health"],pop[,"ages"])
-        #print(infected)
 
         for(i in which(pop[,"health"] == S)){#for each individual S we check if the are close enought to an I individual
             ind=pop[i,]
