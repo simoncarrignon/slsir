@@ -80,7 +80,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,reco=10,speed=.8,xsize=100,ysize=100,
 
 generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100){
     if(is.null(agedistrib)){
-       agedistrib=c(.24,.09,.12,.26,.13,.16) #source: http://www.censusscope.org/us/chart_age.html
+       agedistrib=c(.24,.09,.12,.26,.13,.16) #source: https://www.kff.org/other/state-indicator/distribution-by-age/
        names(agedistrib)=letters[1:length(agedistrib)]
     }
     ages=rep(names(agedistrib),agedistrib*N)
