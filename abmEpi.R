@@ -1,11 +1,11 @@
 
 
-## N the number of agents
-## tstep the duration of the simualtion
-## p the probability for one agent to transmit the disease to another one
-## di the distance between to agent under which the disease cna be transmitted
-## i0 the number of initial infection
-## speed the speed of the agents
+#' @param N the number of agents
+#' @param tstep the duration of the simualtion
+#' @param p the probability for one agent to transmit the disease to another one
+#' @param di the distance between to agent under which the disease cna be transmitted
+#' @param i0 the number of initial infection
+#' @param speed the speed of the agents
 abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10){
     S=1
     I=2
