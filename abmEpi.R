@@ -61,14 +61,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
 
         timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
 
-
-        ## a few lines of code ot visual the spread
-        if(visu){
-            par(mfrow=c(1,2))
-            plot(pop[,"x"],pop[,"y"],pch=21,bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="")
-            plot(1:t,timeseries[,2],col="red",type="l",ylim=c(0,N),xlab="time",ylab="# infected")
-            lines(1:t,timeseries[,5],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
-        }
+        if(visu)visualize(pop,timeseries)
     }
     return(list(timeseries=timeseries,pop=pop))
 }
@@ -94,3 +87,9 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
 
 
+visualize <- function(pop,timeseries){
+            par(mfrow=c(1,2))
+            plot(pop[,"x"],pop[,"y"],pch=21,bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="")
+            plot(1:t,timeseries[,2],col="red",type="l",ylim=c(0,N),xlab="time",ylab="# infected")
+            lines(1:t,timeseries[,5],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
+}
