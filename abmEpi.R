@@ -25,6 +25,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
 
     timeseries=c() #table to store output
     for(t in 1:tstep){
+
         pop[,"x"] = pop[,"x"]+rnorm(N,0,speed)
         pop[,"y"] = pop[,"y"]+rnorm(N,0,speed)
         pop[,"y"][pop[,"y"]>ysize]=ysize
@@ -40,14 +41,14 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
 
             ### Policies and Behavioral changes 
 
-            if(ind["policies"] == B){
+            if(ind["behavior"] == B){
                 group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
                 proba_switch=sig(group_infection,a=10,b=.5)
                 if(runif(1)<proba_switch)
-                    pop[i,"policies"]=G
+                    pop[i,"behavior"]=G
             }
 
-            p_ind = p[ind["policies"]]
+            p_ind = p[ind["behavior"]]
 
             ### disease spread
             dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
@@ -58,7 +59,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
             }
         }
 
-        timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"policies"],levels=1:2))))#store the ratio S vs I
+        timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
 
 
         ## a few lines of code ot visual the spread
@@ -73,15 +74,19 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
 }
 
 
-generatePopulation <- function(N,agedistrib,policies,xsize=100,ysize=100){
-    agedistrib=c(.24,.09,.12,.26,.13,.16)
-    names(agedistrib)=letters[1:length(agedistrib)]
+generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100){
+    if(is.null(agedistrib)){
+       agedistrib=c(.24,.09,.12,.26,.13,.16)
+       names(agedistrib)=letters[1:length(agedistrib)]
+    }
     ages=rep(names(agedistrib),agedistrib*N)
     if(sum(prop.table(table(ages))-agedistrib))stop()
+
+    if(is.null(behavior))behavior=rep(B,N) #by default start with everyone as Bad
+
     pop=cbind(x=runif(N,0,xsize),y=runif(N,0,ysize)) #generate a population 
     health=rep(S,N) #set all population as Susceptible to be infected
-    policies=rep(B,N)
-    pop=cbind(pop,health=health,policies=policies,ages=as.factor(ages))
+    pop=cbind(pop,health=health,behavior=behavior,ages=as.factor(ages))
     return(pop)
 }
 
