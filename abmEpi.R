@@ -1,4 +1,11 @@
+S=1
+I=2
+R=3
+G=2
+B=1
 
+sir=c(1:3)
+names(sir)=c("S","I","R")
 
 ## N the number of agents
 ## tstep the duration of the simualtion
@@ -7,12 +14,6 @@
 ## i0 the number of initial infection
 ## speed the speed of the agents
 abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10){
-    S=1
-    I=2
-    R=3
-    G=2
-    B=1
-
     
     if(is.null(dim(pop))){
         N=pop
@@ -77,9 +78,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
 }
 
 
-generatePopulation <- function(N,agedistrib,policies){
-    B=1
-    G=2
+generatePopulation <- function(N,agedistrib,policies,xsize=100,ysize=100){
     agedistrib=c(.24,.09,.12,.26,.13,.16)
     names(agedistrib)=letters[1:length(agedistrib)]
     ages=rep(names(agedistrib),agedistrib*N)
@@ -94,8 +93,4 @@ generatePopulation <- function(N,agedistrib,policies){
 
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
 
-
-updateBehavior <- function(
-#try one run with visualisation:
- res=abmSIR(200,1000,p=1,di=3,visu=T)
 
