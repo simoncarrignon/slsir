@@ -48,7 +48,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,remi=10,speed=.8,xsize=100,ysize=100,
 
             if(ind["behavior"] == B){
                 group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
-                proba_switch=sig(group_infection,a=10,b=.5)
+                proba_switch=sig(group_infection,a=sat,b=inf)
                 if(runif(1)<proba_switch)
                     pop[i,"behavior"]=G
             }
