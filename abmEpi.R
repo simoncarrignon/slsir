@@ -38,6 +38,9 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,reco=10,speed=.8,xsize=100,ysize=100,
         pop[,"y"][pop[,"y"]<0]=0
         pop[,"x"][pop[,"x"]<0]=0
         
+		pop[pop[,"health"] == I ,"recovery"]=pop[pop[,"health"] == I ,"recovery"]-1
+		pop[pop[,"recovery"] < 1,"health"]=R
+
         #count effected by agents
         infected=table(pop[,"health"],pop[,"ages"])
 
@@ -54,6 +57,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,reco=10,speed=.8,xsize=100,ysize=100,
             }
 
             p_ind = p[ind["behavior"]]
+	
 
             ### disease spread
             dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
@@ -78,11 +82,12 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,reco=10,speed=.8,xsize=100,ysize=100,
 #' @param xsize spatial limits (to keep in the model?)
 #' @param ysize spatial limits 
 
-generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100){
+generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100,recovery=NULL){
     if(is.null(agedistrib)){
        agedistrib=c(.24,.09,.12,.26,.13,.16) #source: https://www.kff.org/other/state-indicator/distribution-by-age/
        names(agedistrib)=letters[1:length(agedistrib)]
     }
+	if(is.null(rep))stop()
     ages=rep(names(agedistrib),agedistrib*N)
     if(sum(prop.table(table(ages))-agedistrib))stop()
 
@@ -90,7 +95,8 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 
     pop=cbind(x=runif(N,0,xsize),y=runif(N,0,ysize)) #generate a population 
     health=rep(S,N) #set all population as Susceptible to be infected
-    pop=cbind(pop,health=health,behavior=behavior,ages=as.factor(ages))
+    recovery=rep(recovery,N) #set all population as Susceptible to be infected
+    pop=cbind(pop,health=health,behavior=behavior,ages=as.factor(ages),recovery=recovery)
     return(pop)
 }
 
