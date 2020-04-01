@@ -17,62 +17,80 @@ names(sir)=c("S","I","R")
 #' @param visu TRUE or FALSE, if output should be plotted
 #' @param sat speed of saturation of the sigmoid
 #' @param inf inflexion point of the sigmoid
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,reco=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10){
-    
-    if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
-        pop=generatePopulation(N=pop)
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F){
 
-    N=nrow(pop)
+	if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
+		pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
 
-    infect=sample(N,i0) #choose the first random individuals to be infected
-    pop[,"health"][infect]=I
+	N=nrow(pop)
 
-    timeseries=c() #table to store output
-    for(t in 1:tstep){
+	infect=sample(N,i0) #choose the first random individuals to be infected
+	pop[,"health"][infect]=I
 
-        ##move the agents 
-        pop[,"x"] = pop[,"x"]+rnorm(N,0,speed)
-        pop[,"y"] = pop[,"y"]+rnorm(N,0,speed)
-        pop[,"y"][pop[,"y"]>ysize]=ysize
-        pop[,"x"][pop[,"x"]>xsize]=xsize
-        pop[,"y"][pop[,"y"]<0]=0
-        pop[,"x"][pop[,"x"]<0]=0
-        
+	if(checkcountact){
+		meancontact=c(0)
+		contacts=rep(0,N)
+	}
+	timeseries=c() #table to store output
+	for(t in 1:tstep){
+
+		if(log)print(paste0("tstep:",t))
+		##move the agents 
+		#pop[,"x"] = pop[,"x"]+runif(N,0,2*speed)-speed
+		#pop[,"y"] = pop[,"y"]+runif(N,0,2*speed)-speed
+		dir=runif(N)*2*pi
+		pop[,"x"] = pop[,"x"]+pop[,"speed"] * cos(dir)
+		pop[,"y"] = pop[,"y"]+pop[,"speed"] * sin(dir)
+		pop[,"y"][pop[,"y"]>ysize]=ysize
+		pop[,"x"][pop[,"x"]>xsize]=xsize
+		pop[,"y"][pop[,"y"]<0]=0
+		pop[,"x"][pop[,"x"]<0]=0
+
 		pop[pop[,"health"] == I ,"recovery"]=pop[pop[,"health"] == I ,"recovery"]-1
 		pop[pop[,"recovery"] < 1,"health"]=R
 
-        #count effected by agents
-        infected=table(pop[,"health"],pop[,"ages"])
+		#count effected by agents
+		infected=table(pop[,"health"],pop[,"ages"])
 
-        for(i in which(pop[,"health"] == S)){#for each individual S we check if the are close enought to an I individual
-            ind=pop[i,]
+		if(checkcountact){
+			contacts=contacts+sapply(1:nrow(pop),function(i)sum(sqrt(abs(pop[-i,"x"]-pop[i,"x"])^2+abs(pop[-i,"y"]-pop[i,"y"])^2)<di))
+			meancontact=c(meancontact,mean(contacts))
+		}
 
-            ### Policies and Behavioral changes 
+		for(i in which(pop[,"health"] == S)){#for each individual S we check if the are close enought to an I individual
+			ind=pop[i,]
 
-            if(ind["behavior"] == B){
-                group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
-                proba_switch=sig(group_infection,a=sat,b=inf)
-                if(runif(1)<proba_switch)
-                    pop[i,"behavior"]=G
-            }
+			### Policies and Behavioral changes 
 
-            p_ind = p[ind["behavior"]]
-	
+			#if(ind["behavior"] == B){
+			#	group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
+			#	proba_switch=sig(group_infection,a=sat,b=inf)
+			#	if(runif(1)<proba_switch)
+			#		pop[i,"behavior"]=G
+			#}
 
-            ### disease spread
-            dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
-            ni=pop[,"health"][dist<di]==I #find infected neighbours
+			p_ind = p[ind["behavior"]]
 
-            if(any(ni)){  #if some agent are close enough 
-                if(any(runif(sum(ni))<p_ind))pop[,"health"][i]=I #if one of the neighbours transmit the virus, the agent becomes Infected
-            }
-        }
 
-        timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
+			### disease spread
+			dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
+			ni=pop[,"health"][dist<di]==I #find infected neighbours
 
-        if(visu)visualize(pop,timeseries)
-    }
-    return(list(timeseries=timeseries,pop=pop))
+			if(any(ni)){  #if some agent are close enough 
+				if(any(runif(sum(ni))<p_ind))pop[,"health"][i]=I #if one of the neighbours transmit the virus, the agent becomes Infected
+			}
+		}
+
+		timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
+
+		if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
+	}
+	output=list(timeseries=timeseries,pop=pop)
+	if(checkcountact){
+output$meancontact=meancontact
+output$contacts=contacts
+}
+	return(output)
 }
 
 
@@ -82,7 +100,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,reco=10,speed=.8,xsize=100,ysize=100,
 #' @param xsize spatial limits (to keep in the model?)
 #' @param ysize spatial limits 
 
-generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100,recovery=NULL){
+generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100,recovery=NULL,speed=NULL){
     if(is.null(agedistrib)){
        agedistrib=c(.24,.09,.12,.26,.13,.16) #source: https://www.kff.org/other/state-indicator/distribution-by-age/
        names(agedistrib)=letters[1:length(agedistrib)]
@@ -95,8 +113,11 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 
     pop=cbind(x=runif(N,0,xsize),y=runif(N,0,ysize)) #generate a population 
     health=rep(S,N) #set all population as Susceptible to be infected
-    recovery=rep(recovery,N) #set all population as Susceptible to be infected
-    pop=cbind(pop,health=health,behavior=behavior,ages=as.factor(ages),recovery=recovery)
+    if(length(recovery)==1)recovery=rep(recovery,N) #set different recovery time for different individuals
+    if(length(recovery)==2)recovery=runif(N,recovery[1],recovery[2]) #
+    if(length(speed)==1)speed=rep(speed,N) #set different speed time for different individuals
+    if(length(speed)==2)speed=abs(rnorm(N,speed[1],speed[2])) 
+    pop=cbind(pop,health=health,behavior=behavior,ages=as.factor(ages),recovery=recovery,speed=speed)
     return(pop)
 }
 
@@ -107,10 +128,10 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
 
 
-visualize <- function(pop,timeseries){
+visualize <- function(pop,timeseries,xsize,ysize){
             par(mfrow=c(1,2))
 N=nrow(pop)
-            plot(pop[,"x"],pop[,"y"],pch=20+pop[,"behavior"],bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="")
+            plot(pop[,"x"],pop[,"y"],pch=20+pop[,"behavior"],bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="",cex=.5)
             plot(1:nrow(timeseries),timeseries[,2],col="red",type="l",ylim=c(0,N),xlab="time",ylab="# infected")
             #lines(1:nrow(timeseries),timeseries[,5],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
             lines(1:nrow(timeseries),timeseries[,1],col="green",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
