@@ -17,7 +17,7 @@ names(sir)=c("S","I","R")
 #' @param visu TRUE or FALSE, if output should be plotted
 #' @param sat speed of saturation of the sigmoid
 #' @param inf inflexion point of the sigmoid
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F){
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F,ts=T,ap=F){
 
 	if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
 		pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
@@ -31,7 +31,9 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 		meancontact=c(0)
 		contacts=rep(0,N)
 	}
-	timeseries=c() #table to store output
+	if(ts)timeseries=c() #table to store output
+    if(ap)allpop=list()
+    output=list()
 	for(t in 1:tstep){
 
 		if(log)print(paste0("tstep:",t))
@@ -62,12 +64,12 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
 			### Policies and Behavioral changes 
 
-			#if(ind["behavior"] == B){
-			#	group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
-			#	proba_switch=sig(group_infection,a=sat,b=inf)
-			#	if(runif(1)<proba_switch)
-			#		pop[i,"behavior"]=G
-			#}
+			if(ind["behavior"] == B){
+				group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
+				proba_switch=sig(group_infection,a=sat,b=inf)
+				if(runif(1)<proba_switch)
+					pop[i,"behavior"]=G
+			}
 
 			p_ind = p[ind["behavior"]]
 
@@ -81,15 +83,17 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 			}
 		}
 
-		timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
+        if(ts)timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
+        if(ap)allpop[[t]]=pop
 
 		if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
 	}
-	output=list(timeseries=timeseries,pop=pop)
-	if(checkcountact){
-output$meancontact=meancontact
-output$contacts=contacts
-}
+    if(ts)output$timeseries=timeseries
+    if(ap)output$allpop=allpop
+    if(checkcountact){
+        output$meancontact=meancontact
+        output$contacts=contacts
+    }
 	return(output)
 }
 
