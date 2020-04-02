@@ -44,22 +44,23 @@ neutral=lapply(1:300,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,1),
 #Visualize
 
 pdf("twofirstdim.pdf",width=14,height=5)
+tstep=1000
 	par(mfrow=c(2,3))
 	par(mar=c(4,4,1,1))
 	for(i in 1:length(inpoint)){
-		plot(1:1500,neutral,type="l",xlim=c(1,1200),ylim=c(0,500),main=paste("inpoint=",inpoint[i]),ylab="#infected",xlab="",lwd=2)
+		plot(1:tstep,neutral,type="l",xlim=c(1,tstep),ylim=c(0,500),main=paste("inpoint=",inpoint[i]),ylab="#infected",xlab="",lwd=2)
 		for(u in 1:length(probas)){
-			lines(1:1500,means[[u]][[i]],lty=1,col=clrsprobs[u])
+			lines(1:tstep,means[[u]][[i]],lty=1,col=clrsprobs[u])
 		}
-		legend("bottomright",legend=c("neutral",paste0("PiB=",1/probas[c(1,2,4,10)],"PiG")),lty=c(1,rep(1,4)),col=c(1,clrsprobs[c(1,2,4,10)]),lwd=2)
+		legend("topright",legend=c("neutral",paste0("PiB=",1/probas[c(1,2,4,10)],"PiG")),lty=c(1,rep(1,4)),col=c(1,clrsprobs[c(1,2,4,10)]),lwd=2)
 	}
 	par(mar=c(4,4,1,1))
 	for(i in (1:length(probas))[c(1,5,9)]){
-		plot(neutral,type="l",xlim=c(1,1200),ylim=c(0,500),main=bquote(P*i[B]==.(1/probas[i])*P*i[G]),xlab="#time",ylab="#infected",lwd=2)
+		plot(neutral,type="l",xlim=c(1,tstep),ylim=c(0,500),main=bquote(P*i[B]==.(1/probas[i])*P*i[G]),xlab="#time",ylab="#infected",lwd=2)
 		for(u in 1:length(inpoint)){
-			lines(1:1500,means[[i]][[u]],lty=1,col=clrsinp[u])
+			lines(1:tstep,means[[i]][[u]],lty=1,col=clrsinp[u])
 		}
-		legend("bottomright",legend=c("neutral",paste0("inpoininpoint=",inpoint)),lty=c(1,rep(1,3)),col=c(1,clrsinp),lwd=2)
+		legend("topright",legend=c("neutral",paste0("inpoininpoint=",inpoint)),lty=c(1,rep(1,3)),col=c(1,clrsinp),lwd=2)
 	}
 dev.off()
 
