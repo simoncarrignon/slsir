@@ -17,7 +17,9 @@ names(sir)=c("S","I","R")
 #' @param visu TRUE or FALSE, if output should be plotted
 #' @param sat speed of saturation of the sigmoid
 #' @param inf inflexion point of the sigmoid
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F,ts=T,ap=F){
+#' @param ts count and return the number of users during the run
+#' @param ap keep and return the full population for each time step
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F,ts=T,ap=F,p_s=0){
 
 	if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
 		pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
@@ -52,7 +54,8 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 		pop[pop[,"recovery"] < 1,"health"]=R
 
 		#count effected by agents
-		infected=table(pop[,"health"],pop[,"ages"])
+		infected=table(factor(pop[,"health"],levels=1:3),pop[,"ages"])
+		behavior=table(factor(pop[,"behavior"],levels=1:2),pop[,"ages"])
 
 		if(checkcountact){
 			contacts=contacts+sapply(1:nrow(pop),function(i)sum(sqrt(abs(pop[-i,"x"]-pop[i,"x"])^2+abs(pop[-i,"y"]-pop[i,"y"])^2)<di))
@@ -69,6 +72,11 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 				proba_switch=sig(group_infection,a=sat,b=inf)
 				if(runif(1)<proba_switch)
 					pop[i,"behavior"]=G
+                if(p_s>0){
+                    group_behavior=behavior[2,ind["ages"]]/sum(behavior[,ind["ages"]]) #compute the percentage of infect people from the same group 
+                    if(runif(1)<(1-proba_switch))
+                        pop[i,"behavior"]=G
+                }
 			}
 
 			p_ind = p[ind["behavior"]]
