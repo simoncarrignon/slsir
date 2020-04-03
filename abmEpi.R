@@ -19,7 +19,7 @@ names(sir)=c("S","I","R")
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F,ts=T,ap=F,p_s=0){
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F,ts=T,ap=F,p_s=0,revert=T){
 
 	if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
 		pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
@@ -55,7 +55,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
 		#count effected by agents
 		infected=table(factor(pop[,"health"],levels=1:3),pop[,"ages"])
-		behavior=table(factor(pop[,"behavior"],levels=1:2),pop[,"ages"])
+		#behavior=table(factor(pop[,"behavior"],levels=1:2),pop[,"ages"])
 
 		if(checkcountact){
 			contacts=contacts+sapply(1:nrow(pop),function(i)sum(sqrt(abs(pop[-i,"x"]-pop[i,"x"])^2+abs(pop[-i,"y"]-pop[i,"y"])^2)<di))
@@ -67,17 +67,23 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
 			### Policies and Behavioral changes 
 
+            group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infected people from the same group 
 			if(ind["behavior"] == B){
-				group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infect people from the same group 
 				proba_switch=sig(group_infection,a=sat,b=inf)
 				if(runif(1)<proba_switch)
 					pop[i,"behavior"]=G
-                if(p_s>0){
-                    group_behavior=behavior[2,ind["ages"]]/sum(behavior[,ind["ages"]]) #compute the percentage of infect people from the same group 
-                    if(runif(1)<(1-proba_switch))
-                        pop[i,"behavior"]=G
-                }
 			}
+            else if(revert){ ##revert back
+				proba_switch=sig(1-group_infection,a=sat,b=inf)
+				if(runif(1)<proba_switch)
+					pop[i,"behavior"]=B
+
+            }
+            if(p_s>0){ #socially learn
+                if(runif(1)<p_s){
+                        pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"],"behavior"],1)
+                }
+            }
 
 			p_ind = p[ind["behavior"]]
 
@@ -93,7 +99,6 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
         if(ts)timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
         if(ap)allpop[[t]]=pop
-
 		if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
 	}
     if(ts)output$timeseries=timeseries
