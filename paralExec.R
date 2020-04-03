@@ -1,0 +1,21 @@
+source("abmEpi.R")
+library(parallel)
+xsize=ysize=100
+rep=300
+inpoint=c(0.01,.5)
+probas=c(0.1,.4)
+psoc=c(0,.1,.5)
+poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
+cl <- makeForkCluster(30,outfile="")
+revert=lapply(psoc,function(p_s)lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:rep,function(j){print(j);abmSIR(poptest,2500,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=20,ts=T,ap=F,p_s=p_s,revert=T)}))))
+save(file="revert.bin",revert)
+norevert=lapply(psoc,function(p_s)lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:rep,function(j){print(j);abmSIR(poptest,2500,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=20,ts=T,ap=F,p_s=p_s,revert=F)}))))
+save(file="norevert.bin",norevert)
+stopCluster(cl)
+
+cl <- makeForkCluster(30,outfile="")
+revertLessSteep=lapply(psoc,function(p_s)lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:rep,function(j){print(j);abmSIR(poptest,2500,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=5,ts=T,ap=F,p_s=p_s,revert=T)}))))
+save(file="revertLessSteep.bin",revert)
+norevertLessSteep=lapply(psoc,function(p_s)lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:rep,function(j){print(j);abmSIR(poptest,2500,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=5,ts=T,ap=F,p_s=p_s,revert=F)}))))
+save(file="norevertLessSteep.bin",norevert)
+stopCluster(cl)
