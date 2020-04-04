@@ -99,7 +99,12 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
         if(ts)timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
         if(ap)allpop[[t]]=pop
-		if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
+		if(visu){
+            if(ap)
+                visualize(allpop,timeseries,xsize=xsize,ysize=ysize)
+            else 
+                visualize(allpop,timeseries,xsize=xsize,ysize=ysize)
+        }
 	}
     if(ts)output$timeseries=timeseries
     if(ap)output$allpop=allpop
@@ -144,13 +149,30 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 #'@param b parameter to define when the slope starts
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
 
+library(RColorBrewer)
 
-visualize <- function(pop,timeseries,xsize,ysize){
-            par(mfrow=c(1,2))
-N=nrow(pop)
-            plot(pop[,"x"],pop[,"y"],pch=20+pop[,"behavior"],bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="",cex=.5)
-            plot(1:nrow(timeseries),timeseries[,2],col="red",type="l",ylim=c(0,N),xlab="time",ylab="# infected")
-            #lines(1:nrow(timeseries),timeseries[,5],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
-            lines(1:nrow(timeseries),timeseries[,1],col="green",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
-            lines(1:nrow(timeseries),timeseries[,3],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
+visualize <- function(allpop,timeseries,xsize,ysize){
+    png(sprintf("frame_%04d.png",nrow(timeseries)),width=1200,height=900)
+    pop=c()
+    if(is.null(dim(allpop)))pop=allpop[[length(allpop)]]
+    else pop=allpop
+
+    if(is.null(dim(allpop)))layout(matrix(c(1,1,1,2,3,4),nrow=3,ncol=2),width=c(2,1))  
+    else par(mfrow=c(1,2))
+    N=nrow(pop)
+    plot(pop[,"x"],pop[,"y"],pch=20+pop[,"behavior"],bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="",cex=2)
+    plot(1:nrow(timeseries),timeseries[,2],col="red",type="l",ylim=c(0,N),xlab="time",ylab="# infected")
+    lines(1:nrow(timeseries),timeseries[,1],col="green",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
+    lines(1:nrow(timeseries),timeseries[,3],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
+
+
+    allheal=sapply(allpop,function(i){table(factor(i[,"health"],levels=1:3),i[,"ages"])[2,]})
+    allbeh=sapply(allpop,function(i){table(factor(i[,"behavior"],levels=1:2),i[,"ages"])[2,]})
+    agecol=brewer.pal(6,"Pastel1")
+    if(is.null(dim(allpop))){
+        barplot(allheal,border=NA,space=0,col=agecol)
+        barplot(allbeh,border=NA,space=0,col=agecol)
+    }
+    legend("toplef",legend=c("0-18","18-25","26-34","35-54","55-64","65+"),fill=agecol,title="age category",cex=1)
+    dev.off()
 }
