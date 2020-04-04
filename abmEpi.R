@@ -67,9 +67,9 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
             ### Policies and Behavioral changes 
 
-            group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infected people from the same group 
 
             if(runif(1)<p_i){ #probability for individual learning (p_i)
+                group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infected people from the same group 
 
                 if(ind["behavior"] == B){
                     proba_switch=sig(group_infection,a=sat,b=inf)
@@ -87,9 +87,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
                 pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"],"behavior"],1)
             }
 
-            #p_ind = p[ind["behavior"]]
-            p_ind = 1
-
+            p_ind = p[ind["behavior"]]
 
             ### disease spread
             dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
@@ -99,7 +97,6 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
                 if(any(runif(sum(ni))<p_ind))pop[,"health"][i]=I #if one of the neighbours transmit the virus, the agent becomes Infected
             }
         }
-        pop[pop[,"behavior"]== G,"speed"]=pop[pop[,"behavior"]== G,"speed"]/10
         if(ts)timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
         if(ap)allpop[[t]]=pop
         if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
