@@ -67,9 +67,9 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
             ### Policies and Behavioral changes 
 
-            group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infected people from the same group 
 
             if(runif(1)<p_i){ #probability for individual learning (p_i)
+                group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infected people from the same group 
 
                 if(ind["behavior"] == B){
                     proba_switch=sig(group_infection,a=sat,b=inf)
@@ -88,7 +88,6 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
             }
 
             p_ind = p[ind["behavior"]]
-
 
             ### disease spread
             dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
