@@ -19,95 +19,98 @@ names(sir)=c("S","I","R")
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,log=F,checkcountact=F,ts=T,ap=F,p_s=0,revert=T){
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=1000,inf_r=1,log=F,checkcountact=F,ts=T,ap=F,p_i=1){
 
-	if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
-		pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
+    if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
+        pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
 
-	N=nrow(pop)
+    N=nrow(pop)
 
-	infect=sample(N,i0) #choose the first random individuals to be infected
-	pop[,"health"][infect]=I
+    infect=sample(N,i0) #choose the first random individuals to be infected
+    pop[,"health"][infect]=I
 
-	if(checkcountact){
-		meancontact=c(0)
-		contacts=rep(0,N)
-	}
-	if(ts)timeseries=c() #table to store output
+    if(checkcountact){
+        meancontact=c(0)
+        contacts=rep(0,N)
+    }
+    if(ts)timeseries=c() #table to store output
     if(ap)allpop=list()
     output=list()
-	for(t in 1:tstep){
+    for(t in 1:tstep){
 
-		if(log)print(paste0("tstep:",t))
-		##move the agents 
-		#pop[,"x"] = pop[,"x"]+runif(N,0,2*speed)-speed
-		#pop[,"y"] = pop[,"y"]+runif(N,0,2*speed)-speed
-		dir=runif(N)*2*pi
-		pop[,"x"] = pop[,"x"]+pop[,"speed"] * cos(dir)
-		pop[,"y"] = pop[,"y"]+pop[,"speed"] * sin(dir)
-		pop[,"y"][pop[,"y"]>ysize]=ysize
-		pop[,"x"][pop[,"x"]>xsize]=xsize
-		pop[,"y"][pop[,"y"]<0]=0
-		pop[,"x"][pop[,"x"]<0]=0
+        if(log)print(paste0("tstep:",t))
+        ##move the agents 
+        #pop[,"x"] = pop[,"x"]+runif(N,0,2*speed)-speed
+        #pop[,"y"] = pop[,"y"]+runif(N,0,2*speed)-speed
+        dir=runif(N)*2*pi
+        pop[,"x"] = pop[,"x"]+pop[,"speed"] * cos(dir)
+        pop[,"y"] = pop[,"y"]+pop[,"speed"] * sin(dir)
+        pop[,"y"][pop[,"y"]>ysize]=ysize
+        pop[,"x"][pop[,"x"]>xsize]=xsize
+        pop[,"y"][pop[,"y"]<0]=0
+        pop[,"x"][pop[,"x"]<0]=0
 
-		pop[pop[,"health"] == I ,"recovery"]=pop[pop[,"health"] == I ,"recovery"]-1
-		pop[pop[,"recovery"] < 1,"health"]=R
+        pop[pop[,"health"] == I ,"recovery"]=pop[pop[,"health"] == I ,"recovery"]-1
+        pop[pop[,"recovery"] < 1,"health"]=R
 
-		#count effected by agents
-		infected=table(factor(pop[,"health"],levels=1:3),pop[,"ages"])
-		#behavior=table(factor(pop[,"behavior"],levels=1:2),pop[,"ages"])
+        #count effected by agents
+        infected=table(factor(pop[,"health"],levels=1:3),pop[,"ages"])
+        #behavior=table(factor(pop[,"behavior"],levels=1:2),pop[,"ages"])
 
-		if(checkcountact){
-			contacts=contacts+sapply(1:nrow(pop),function(i)sum(sqrt(abs(pop[-i,"x"]-pop[i,"x"])^2+abs(pop[-i,"y"]-pop[i,"y"])^2)<di))
-			meancontact=c(meancontact,mean(contacts))
-		}
+        if(checkcountact){
+            contacts=contacts+sapply(1:nrow(pop),function(i)sum(sqrt(abs(pop[-i,"x"]-pop[i,"x"])^2+abs(pop[-i,"y"]-pop[i,"y"])^2)<di))
+            meancontact=c(meancontact,mean(contacts))
+        }
 
-		for(i in which(pop[,"health"] == S)){#for each individual S we check if the are close enought to an I individual
-			ind=pop[i,]
+        for(i in which(pop[,"health"] == S)){#for each individual S we check if the are close enought to an I individual
+            ind=pop[i,]
 
-			### Policies and Behavioral changes 
+            ### Policies and Behavioral changes 
 
             group_infection=infected[2,ind["ages"]]/sum(infected[,ind["ages"]]) #compute the percentage of infected people from the same group 
-			if(ind["behavior"] == B){
-				proba_switch=sig(group_infection,a=sat,b=inf)
-				if(runif(1)<proba_switch)
-					pop[i,"behavior"]=G
-			}
-            else if(revert){ ##revert back
-				proba_switch=sig(1-group_infection,a=sat,b=inf)
-				if(runif(1)<proba_switch)
-					pop[i,"behavior"]=B
 
-            }
-            if(p_s>0){ #socially learn
-                if(runif(1)<p_s){
-                        pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"],"behavior"],1)
+            if(runif(1)<p_i){ #probability for individual learning (p_i)
+
+                if(ind["behavior"] == B){
+                    proba_switch=sig(group_infection,a=sat,b=inf)
+                    if(runif(1)<proba_switch)
+                        pop[i,"behavior"]=G
                 }
+                else{
+                    proba_switch=sig(1-group_infection,a=sat_r,b=inf_r)
+                    if(runif(1)<proba_switch)
+                        pop[i,"behavior"]=B
+                }
+
+            }
+            else{ #probability of social learning (1-p_i)
+                pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"],"behavior"],1)
             }
 
-			p_ind = p[ind["behavior"]]
+            #p_ind = p[ind["behavior"]]
+            p_ind = 1
 
 
-			### disease spread
-			dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
-			ni=pop[,"health"][dist<di]==I #find infected neighbours
+            ### disease spread
+            dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
+            ni=pop[,"health"][dist<di]==I #find infected neighbours
 
-			if(any(ni)){  #if some agent are close enough 
-				if(any(runif(sum(ni))<p_ind))pop[,"health"][i]=I #if one of the neighbours transmit the virus, the agent becomes Infected
-			}
-		}
-
+            if(any(ni)){  #if some agent are close enough 
+                if(any(runif(sum(ni))<p_ind))pop[,"health"][i]=I #if one of the neighbours transmit the virus, the agent becomes Infected
+            }
+        }
+        pop[pop[,"behavior"]== G,"speed"]=pop[pop[,"behavior"]== G,"speed"]/10
         if(ts)timeseries=rbind(timeseries,c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2))))#store the ratio S vs I
         if(ap)allpop[[t]]=pop
-		if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
-	}
+        if(visu)visualize(pop,timeseries,xsize=xsize,ysize=ysize)
+    }
     if(ts)output$timeseries=timeseries
     if(ap)output$allpop=allpop
     if(checkcountact){
         output$meancontact=meancontact
         output$contacts=contacts
     }
-	return(output)
+    return(output)
 }
 
 
