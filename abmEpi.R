@@ -33,7 +33,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
         meancontact=c(0)
         contacts=rep(0,N)
     }
-    if(ts)timeseries=c() #table to store output
+    if(ts)timeseries=c(table(factor(pop[,"health"],levels=1:3)),table(factor(pop[,"behavior"],levels=1:2)))
     if(ap)allpop=list()
     output=list()
     for(t in 1:tstep){
@@ -62,7 +62,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
             meancontact=c(meancontact,mean(contacts))
         }
 
-        for(i in which(pop[,"health"] == S)){#for each individual S we check if the are close enought to an I individual
+        for(i in sample(N)){#for each individual S we check if the are close enought to an I individual
             ind=pop[i,]
 
             ### Policies and Behavioral changes 
