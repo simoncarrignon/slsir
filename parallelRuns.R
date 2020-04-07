@@ -23,8 +23,6 @@ source("abmEpi.R")
 library(parallel)
 xsize=ysize=100
 
-cl <- makeForkCluster(ns,outfile="")
-
 nsim=nsm
 
 inf=runif(nsim,0,1)
@@ -38,26 +36,26 @@ allparameter=cbind.data.frame(inf=inf,sat=sat,inf_r=inf_r,sat_r=sat_r,pind=pind)
 
 cl <- makeForkCluster(ns,outfile="")
 allsummary=parSapply(cl,1:nsim,function(j)
-					 {
-						 print(paste("sim #",j,"/",nsim));
-						 simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
-									 inf=allparameter$inf[j],
-									 sat=allparameter$sat[j],
-									 inf_r=allparameter$inf_r[j],
-									 sat_r=allparameter$sat_r[j],
-									 p_i=allparameter$pind[j],
-									 ts=T,ap=F,visu=F
-									 )
-						 save(file=file.path(mainfold,paste0("simu_",j,".bin")),simu)
-						 c(time_max=which.max(simu$timeseries[,2]),final_size=sum(simu$timeseries[1500,2:3]),max_infect=max(simu$timeseries[,2]))
-					 }
+                     {
+                         print(paste("sim #",j,"/",nsim));
+                         simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                     inf=allparameter$inf[j],
+                                     sat=allparameter$sat[j],
+                                     inf_r=allparameter$inf_r[j],
+                                     sat_r=allparameter$sat_r[j],
+                                     p_i=allparameter$pind[j],
+                                     ts=T,ap=F,visu=F
+                                     )
+                         save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
+                         c(time_max=which.max(simu$timeseries[,2]),final_size=sum(simu$timeseries[1500,2:3]),max_infect=max(simu$timeseries[,2]))
+                     }
 )
 
 
 stopCluster(cl)
 
 allresults=cbind(allparameter,t(allsummary))
-save(file=file.path(mainfold,"allresults.bin"),allresults)
+save(file=file.path(fold,"allresults.bin"),allresults)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
