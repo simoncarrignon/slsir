@@ -48,7 +48,7 @@ allsummary=parSapply(cl,1:nsim,function(j)
 									 p_i=allparameter$pind[j],
 									 ts=T,ap=F,visu=F
 									 )
-						 #save(file=paste0(outfold,"simu_",j,".bin"),simu)
+						 save(file=file.path(mainfold,paste0("simu_",j,".bin")),simu)
 						 c(time_max=which.max(simu$timeseries[,2]),final_size=sum(simu$timeseries[1500,2:3]),max_infect=max(simu$timeseries[,2]))
 					 }
 )
@@ -57,7 +57,7 @@ allsummary=parSapply(cl,1:nsim,function(j)
 stopCluster(cl)
 
 allresults=cbind(allparameter,t(allsummary))
-save(file=paste0(mainfold,"allresults.bin"),allresults)
+save(file=file.path(mainfold,"allresults.bin"),allresults)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
