@@ -88,8 +88,8 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
                     pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"] ,"behavior"],1)
                 if(strategy=="best"){
                     best=pop[pop[,"health"] == S,]
-                    if(nrow(behavior)>1)
-                        pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"] & pop[,"health"]==S,"behavior"],1)
+                    if(nrow(best)>1)
+                        pop[i,"behavior"]=sample(best[,"behavior"],1)
                 }
             }
 
