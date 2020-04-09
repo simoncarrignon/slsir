@@ -103,7 +103,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
             if(ap)
                 visualize(allpop,timeseries,xsize=xsize,ysize=ysize,file=file)
             else 
-                visualize(allpop,timeseries,xsize=xsize,ysize=ysize,file=file)
+                visualize(pop,timeseries,xsize=xsize,ysize=ysize,file=file)
         }
 	}
     if(ts)output$timeseries=timeseries
@@ -166,13 +166,13 @@ visualize <- function(allpop,timeseries,xsize,ysize,file=F){
     lines(1:nrow(timeseries),timeseries[,3],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
 
 
-    allheal=sapply(allpop,function(i){table(factor(i[,"health"],levels=1:3),i[,"ages"])[2,]})
-    allbeh=sapply(allpop,function(i){table(factor(i[,"behavior"],levels=1:2),i[,"ages"])[2,]})
-    agecol=brewer.pal(6,"Pastel1")
     if(is.null(dim(allpop))){
+        allheal=sapply(allpop,function(i){table(factor(i[,"health"],levels=1:3),i[,"ages"])[2,]})
+        allbeh=sapply(allpop,function(i){table(factor(i[,"behavior"],levels=1:2),i[,"ages"])[2,]})
+        agecol=brewer.pal(6,"Pastel1")
         barplot(allheal,border=NA,space=0,col=agecol)
         barplot(allbeh,border=NA,space=0,col=agecol)
+        legend("toplef",legend=c("0-18","18-25","26-34","35-54","55-64","65+"),fill=agecol,title="age category",cex=1)
     }
-    legend("toplef",legend=c("0-18","18-25","26-34","35-54","55-64","65+"),fill=agecol,title="age category",cex=1)
     if(file)dev.off()
 }
