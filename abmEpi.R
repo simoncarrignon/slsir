@@ -19,7 +19,7 @@ names(sir)=c("S","I","R")
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,file=F){
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,file=F,strategy="all"){
 
     if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
         pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
@@ -84,7 +84,13 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
             }
             else{ #probability of social learning (1-p_i)
-                pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"],"behavior"],1)
+                if(strategy=="all")
+                    pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"] ,"behavior"],1)
+                if(strategy=="best"){
+                    best=pop[pop[,"health"] == S,]
+                    if(nrow(behavior)>1)
+                        pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"] & pop[,"health"]==S,"behavior"],1)
+                }
             }
 
             p_ind = p[ind["behavior"]]
