@@ -46,7 +46,7 @@ allsummary=parSapply(cl,1:nsim,function(j)
                                      p_i=allparameter$pind[j],
                                      ts=T,ap=F,visu=F
                                      )
-                         save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
+                         #save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
                          c(time_max=which.max(simu$timeseries[,2]),final_size=sum(simu$timeseries[1500,2:3]),max_infect=max(simu$timeseries[,2]))
                      }
 )
