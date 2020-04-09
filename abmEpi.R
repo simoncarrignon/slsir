@@ -149,7 +149,7 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 #'@param b parameter to define when the slope starts
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
 
-library(RColorBrewer)
+require(RColorBrewer)
 
 visualize <- function(allpop,timeseries,xsize,ysize,file=F){
     if(file)png(sprintf("frame_%04d.png",nrow(timeseries)),width=1200,height=900)
