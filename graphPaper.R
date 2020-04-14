@@ -61,6 +61,7 @@ repetBestDos=parSapply(cl,1:100,function(i){print(i);abmSIR(poptest,1500,p=c(1,.
 neutralbad=sapply(1:10,function(i){print(i);abmSIR(poptest,1500,p=c(1,1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
 library(parallel)
 
+save(file="worst.bin",worst)
 save(file="best.bin",best)
 load("best.bin")
 cl <- makeForkCluster(3,outfile="")
