@@ -10,6 +10,7 @@ names(sir)=c("S","I","R")
 #' @param N the number of agents
 #' @param tstep the duration of the simualtion
 #' @param p the probability for one agent to transmit the disease to another one
+#' @param p_i the probability for one agent to learn socially
 #' @param di the distance between to agent under which the disease cna be transmitted
 #' @param i0 the number of initial infection
 #' @param speed the speed of the agents
@@ -124,6 +125,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
 #' @param N number of agents
 #' @param agedistrib a distribution defining the percentage of population represented in different age class
+#' @param recovery a distribution recovery time
 #' @param behavior a distribution of behaviors
 #' @param xsize spatial limits (to keep in the model?)
 #' @param ysize spatial limits 
