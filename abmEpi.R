@@ -1,3 +1,5 @@
+source("visualisation.R")
+
 S=1
 I=2
 R=3
@@ -85,10 +87,12 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
             }
             else{ #probability of social learning (1-p_i)
-                if(strategy=="all")
-                    pop[i,"behavior"]=sample(pop[pop[,"ages"]==ind["ages"] ,"behavior"],1)
+				candidates=pop[pop[,"ages"]==ind["ages"] ,]
+                if(strategy=="all"){
+                    pop[i,"behavior"]=sample(candidates[,"behavior"],1)
+				}
                 if(strategy=="best"){
-                    best=pop[pop[,"health"] == S,,drop=F]
+                    best=candidates[candidates[,"health"] == S,,drop=F]
                     if(nrow(best)>1)
                         pop[i,"behavior"]=sample(best[,"behavior"],1)
                 }
@@ -157,30 +161,3 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 #'@param b parameter to define when the slope starts
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
 
-require(RColorBrewer)
-
-visualize <- function(allpop,timeseries,xsize,ysize,file=F){
-    if(file)png(sprintf("frame_%04d.png",nrow(timeseries)),width=1200,height=900)
-    pop=c()
-    if(is.null(dim(allpop)))pop=allpop[[length(allpop)]]
-    else pop=allpop
-
-    if(is.null(dim(allpop)))layout(matrix(c(1,1,1,2,3,4),nrow=3,ncol=2),width=c(2,1))  
-    else par(mfrow=c(1,2))
-    N=nrow(pop)
-    plot(pop[,"x"],pop[,"y"],pch=20+pop[,"behavior"],bg=pop[,"health"]-1,ylim=c(0,ysize),lwd=.2,xlim=c(0,xsize),xlab="",ylab="",cex=2)
-    plot(1:nrow(timeseries),timeseries[,2],col="red",type="l",ylim=c(0,N),xlab="time",ylab="# infected")
-    lines(1:nrow(timeseries),timeseries[,1],col="green",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
-    lines(1:nrow(timeseries),timeseries[,3],col="blue",type="l",ylim=c(0,N),xlab="time",ylab="# GOOD")
-
-
-    if(is.null(dim(allpop))){
-        allheal=sapply(allpop,function(i){table(factor(i[,"health"],levels=1:3),i[,"ages"])[2,]})
-        allbeh=sapply(allpop,function(i){table(factor(i[,"behavior"],levels=1:2),i[,"ages"])[2,]})
-        agecol=brewer.pal(6,"Pastel1")
-        barplot(allheal,border=NA,space=0,col=agecol)
-        barplot(allbeh,border=NA,space=0,col=agecol)
-        legend("toplef",legend=c("0-18","18-25","26-34","35-54","55-64","65+"),fill=agecol,title="age category",cex=1)
-    }
-    if(file)dev.off()
-}
