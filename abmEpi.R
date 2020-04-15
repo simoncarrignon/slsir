@@ -22,7 +22,7 @@ names(sir)=c("S","I","R")
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,file=F,strategy="all"){
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,file=F,strategy="all",sl_rad=10){
 
     if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
         pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
@@ -87,7 +87,12 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 
             }
             else{ #probability of social learning (1-p_i)
-				candidates=pop[pop[,"ages"]==ind["ages"] ,]
+				candidates=pop[-i,] #remove the agend
+				candidates=pop[pop[,"ages"]==ind["ages"] ,] #take same age agents
+				if(sl_rad > 0){
+					dist=sqrt(abs(candidates[,"x"]-ind["x"])^2+abs(candidates[,"y"]-ind["y"])^2) 
+					candidates=candidates[dist<sl_rad,,drop=F]
+				}
                 if(strategy=="all"){
                     pop[i,"behavior"]=sample(candidates[,"behavior"],1)
 				}
