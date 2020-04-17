@@ -30,9 +30,10 @@ inf_r=runif(nsim,0,1)
 sat=10^runif(nsim,-1,3)
 sat_r=10^runif(nsim,-1,3)
 pind=runif(nsim)
+sl_rad=sample(c(0,2:(xsize/2)),nsim,replace=T)
 
 #allparameter=expand.grid(inf=inf,inf_r=inf_r,sat=sat,sat_r=sat_r,pind=pind)
-allparameter=cbind.data.frame(inf=inf,sat=sat,inf_r=inf_r,sat_r=sat_r,pind=pind)
+allparameter=cbind.data.frame(inf=inf,sat=sat,inf_r=inf_r,sat_r=sat_r,pind=pind,sl_rad=sl_rad)
 
 cl <- makeForkCluster(ns,outfile="")
 allsummary=parSapply(cl,1:nsim,function(j)
@@ -44,6 +45,8 @@ allsummary=parSapply(cl,1:nsim,function(j)
                                      inf_r=allparameter$inf_r[j],
                                      sat_r=allparameter$sat_r[j],
                                      p_i=allparameter$pind[j],
+                                     sl_rad=allparameter$sl_rad[j],
+                                     strategy="random",
                                      ts=T,ap=F,visu=F
                                      )
                          #save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
