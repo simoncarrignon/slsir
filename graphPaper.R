@@ -32,7 +32,7 @@ bscore <- function(x)(x-min(x))/(max(x)-min(x))
 name="midCurveAllBad"
 name="midCurveAllBadBestSLS"
 name="midCurve15Good"
-#name="testradius"
+name="testradius"
 
 aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
 allresults=do.call("rbind",aa)
@@ -79,11 +79,15 @@ dev.off()
 
 ### Figure3
 png("5e8779c56517890001536101/figures/distribSimulation.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
-plot(allresults$time_max,allresults$max_infect,col=alpha(color.gradient(allresults$distances,c(mygreen,"yellow", myred)),.2),main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
-sset=sort(allresults$distances)
-cols=alpha(color.gradient(sset,c(mygreen,"yellow", myred)),1)
-lsset=seq(1,length(sset),length.out=4)
-legend("topright",legend=sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),col=cols[lsset],pch=20)
+rank=rank(allresults$distances)
+orderscol=rank
+color_class=rev(brewer.pal(5,"YlOrRd"))
+colorbest=color_class[1]
+orderscol=rep(alpha(color_class[5],.6),length(orderscol))
+nvl=c(500,2500,12500,62500)
+for(i in (length(nvl):1)) orderscol[rank<=nvl[i]]=alpha(color_class[i],.6)
+plot(allresults$time_max,allresults$max_infect,bg=orderscol,main="distance",pch=21,xlab="Time Max",ylab="Max Infected",lwd=.1)
+legend("topright",legend=c(paste("<",nvl),"all"),pt.bg=color_class,pch=21,pt.lwd=.1,title="Rank")
 dev.off()
 
 ### Figure4a
@@ -94,11 +98,11 @@ cols=alpha(color.gradient(sset,c(mygreen,"yellow", myred)),1)
 lsset=seq(1,length(sset),length.out=4)
 v=m(t=t,Rm=max(allresults$max_infect)-min(allresults$max_infect),mm=min(allresults$max_infect),Rt=max(allresults$time_max)-min(allresults$time_max),mt=min(allresults$time_max),s=.3)
 t=400:1500
-polygon(c(100,t,1510),c(0,v,0),col=alpha("dark blue",.5),lwd=2,angle=60,density=5)
-legend("topright",legend=c(sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),expression(delta<.25)),col=c(cols[lsset],NA),fill=c(rep(0,4),alpha("dark blue",.5)),border=c(rep(NA,4),alpha("dark blue",.5)),angle=c(rep(NA,4),60),density=c(rep(NA,4),25),pch=20)
+polygon(c(100,t,1510),c(0,v,0),col=alpha(colorbest,.5),lwd=2,angle=60,density=5)
+legend("topright",legend=c(sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),expression(delta<.25)),col=c(cols[lsset],NA),fill=c(rep(0,4),alpha(colorbest,.5)),border=c(rep(NA,4),alpha(colorbest,.5)),angle=c(rep(NA,4),60),density=c(rep(NA,4),25),pch=20)
 #points(best1000$time_max,best1000$max_infect,col="green",main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
 #points(best500$time_max,best500$max_infect,col="red",main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
-#points(best250$time_max,best250$max_infect,col="dark blue",main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
+#points(best250$time_max,best250$max_infect,col=colorbest,main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
 dev.off()
 
 
@@ -109,8 +113,8 @@ sset=sort(allresults$distances)
 cols=alpha(color.gradient(sset,c(mygreen,"yellow", myred)),1)
 lsset=seq(1,length(sset),length.out=4)
 v=m(t=t,Rm=max(allresults$max_infect)-min(allresults$max_infect),mm=min(allresults$max_infect),Rt=max(allresults$time_max)-min(allresults$time_max),mt=min(allresults$time_max),s=.6)
-polygon(c(100,t,1010),c(0,v,0),col=alpha("dark blue",.5),lwd=2,angle=60,density=5)
-legend("topright",legend=c(sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),expression(delta<.6)),col=c(cols[lsset],NA),fill=c(rep(0,4),alpha("dark blue",.5)),border=c(rep(NA,4),alpha("dark blue",.5)),angle=c(rep(NA,4),60),density=c(rep(NA,4),25),pch=20)
+polygon(c(100,t,1010),c(0,v,0),col=alpha(colorbest,.5),lwd=2,angle=60,density=5)
+legend("topright",legend=c(sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),expression(delta<.6)),col=c(cols[lsset],NA),fill=c(rep(0,4),alpha(colorbest,.5)),border=c(rep(NA,4),alpha(colorbest,.5)),angle=c(rep(NA,4),60),density=c(rep(NA,4),25),pch=20)
 dev.off()
 
 dev.new()
@@ -128,10 +132,10 @@ png(paste0("5e8779c56517890001536101/figures/switchfunctions.png"),pointsize=17,
     par(mfrow=c(1,2))
     x=seq(0,1,.01)
     plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="proportion of infected people of the same age", ylab="probability to switch behavior",main="P(NA->A)")
-    for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf[i],a=best$sat[i]),ylim=c(0,1),xlim=c(0,1),col=alpha("dark blue",.1),lwd=2) 
+    for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf[i],a=best$sat[i]),ylim=c(0,1),xlim=c(0,1),col=alpha(colorbest,.1),lwd=2) 
     #lines(x,sig(x,b=mean(best$inf),a=mean(best$sat)),ylim=c(0,1),xlim=c(0,1),col=alpha("black",.6),lwd=2) 
     plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="proportion of infected people of the same age", ylab="probability to switch behavior",main="P(A->NA)")
-    for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf_r[i],a=best$sat_r[i]),ylim=c(0,1),xlim=c(0,1),col=alpha("dark blue",.1),lwd=2) 
+    for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf_r[i],a=best$sat_r[i]),ylim=c(0,1),xlim=c(0,1),col=alpha(colorbest,.1),lwd=2) 
     #lines(x,sig(x,b=mean(best$inf_r),a=mean(best$sat_r)),ylim=c(0,1),xlim=c(0,1),col=alpha("black",.6),lwd=2) 
 dev.off()
 
@@ -154,27 +158,27 @@ dev.off()
 ##FIGURE 7
 
 png("5e8779c56517890001536101/figures/posterior_pind.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
- plot2dens(prior=allresults$pind,A=best$pind,cols=c(P="white",A=alpha("dark blue",.5),NA),from=0,to=1,main="posterior proba individual learning",xlab="proba individual learning")
+ plot2dens(prior=allresults$pind,A=best$pind,cols=c(P="white",A=alpha(colorbest,.5),NA),from=0,to=1,main="posterior proba individual learning",xlab="proba individual learning")
 dev.off()
 
 png("5e8779c56517890001536101/figures/posterior_sl_rad.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
- plot2dens(prior=allresults$sl_rad,A=best$sl_rad,cols=c(P="white",A=alpha("dark blue",.5),NA),from=1,to=100,main="posterior proba radius social learning",xlab="radius social learning")
+ plot2dens(prior=allresults$sl_rad,A=best$sl_rad,cols=c(P="white",A=alpha(colorbest,.5),NA),from=1,to=100,main="posterior proba radius social learning",xlab="radius social learning")
 dev.off()
 
 png("5e8779c56517890001536101/figures/posterior_sat_r.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
- plot2dens(prior=log10(allresults$sat_r),A=log10(best$sat_r),cols=c(P="white",A=alpha("dark blue",.5),NA),from=-1,to=3,main="posterior revert steepness",xlab="revert steepness (log10)",xaxt="n")
+ plot2dens(prior=log10(allresults$sat_r),A=log10(best$sat_r),cols=c(P="white",A=alpha(colorbest,.5),NA),from=-1,to=3,main="posterior revert steepness",xlab="revert steepness (log10)",xaxt="n")
 dev.off()
 
 png("5e8779c56517890001536101/figures/posterior_sat.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
- plot2dens(prior=log10(allresults$sat),A=log10(best$sat),cols=c(P="white",A=alpha("dark blue",.5),NA),from=-1,to=3,xlab="steepness (log10)",main="posterior steepness",xaxt="n")
+ plot2dens(prior=log10(allresults$sat),A=log10(best$sat),cols=c(P="white",A=alpha(colorbest,.5),NA),from=-1,to=3,xlab="steepness (log10)",main="posterior steepness",xaxt="n")
 dev.off()
 
 png("5e8779c56517890001536101/figures/posterior_inf_r.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
- plot2dens(prior=(allresults$inf_r),A=(best$inf_r),cols=c(P="white",A=alpha("dark blue",.5),NA),from=0,to=1,main="posterior revert inflection point",xlab="revert inflection point",xaxt="n")
+ plot2dens(prior=(allresults$inf_r),A=(best$inf_r),cols=c(P="white",A=alpha(colorbest,.5),NA),from=0,to=1,main="posterior revert inflection point",xlab="revert inflection point",xaxt="n")
 dev.off()
 
 png("5e8779c56517890001536101/figures/posterior_inf.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
- plot2dens(prior=(allresults$inf),A=(best$inf),cols=c(P="white",A=alpha("dark blue",.5),NA),from=0,to=1,main="posterior inflection point",xlab="inflection point",xaxt="n")
+ plot2dens(prior=(allresults$inf),A=(best$inf),cols=c(P="white",A=alpha(colorbest,.5),NA),from=0,to=1,main="posterior inflection point",xlab="inflection point",xaxt="n")
 dev.off()
 
 
@@ -185,12 +189,12 @@ for(d in c(1,.9,.8,.6,.4,.3,.2)){
     best=allresults[allresults$distances<d,]
     par(mfrow=c(1,6))
     par(mar=c(4,4,1,1))
-    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="revert steepness (log10)")
-    hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(0,1),ylim=c(-1,3),xlab="inflexion point",ylab="steepness (log10)")
-    hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(0,1),ylim=c(0,1),xlab="inflexion point",ylab="individual learning")
-    hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(-1,3),ylim=c(0,1),xlab="steepness (log10)",ylab="individual learning")
-    hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="individual learning")
-    hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="infection points")
+    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="revert steepness (log10)")
+    hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab="inflexion point",ylab="steepness (log10)")
+    hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(0,1),ylim=c(0,1),xlab="inflexion point",ylab="individual learning")
+    hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(-1,3),ylim=c(0,1),xlab="steepness (log10)",ylab="individual learning")
+    hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="individual learning")
+    hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="infection points")
     dev.off()
 }
 
@@ -411,10 +415,10 @@ layout(matrix(c(1,1,1,1,2,3,4,5),nrow=4,ncol=2),width=c(2,1))
 
 
     png(paste0("5e8779c56517890001536101/figures/posterior2d_inf_r_sat_r.png"),pointsize=17, res = 100, width = 7, height = 7, units = "in")
-    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="revert steepness")
+    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="revert steepness")
     dev.off()
     png(paste0("5e8779c56517890001536101/figures/posterior2d_inf_sat_r.png"),pointsize=17, res = 100, width = 7, height = 7, units = "in")
-    hdr.boxplot.2d(best$inf,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha("dark blue",.9),xlim=c(0,1),ylim=c(-1,3),xlab="inf. point",ylab="revert steepness")
+    hdr.boxplot.2d(best$inf,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab="inf. point",ylab="revert steepness")
 dev.off()
 
 
