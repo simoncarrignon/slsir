@@ -91,7 +91,7 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
                     candidates=pop[pop[,"ages"]==ind["ages"] ,] #take same age agents
                     if(sl_rad > 0){
                         dist=sqrt(abs(candidates[,"x"]-ind["x"])^2+abs(candidates[,"y"]-ind["y"])^2) 
-                        candidates=candidates[dist<sl_rad,,drop=F]
+                        candidates=candidates[dist<sl_rad,,drop=F] #limits candidates to people with radius sl_rad
                     }
                     if(strategy=="all"){
                         pop[i,"behavior"]=sample(candidates[,"behavior"],1)
