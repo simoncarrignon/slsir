@@ -2,7 +2,7 @@
 source("abmEpi.R")
 
 poptest=generatePopulation(500,recovery=2500) 
-neutral=replicate(50,abmSIR(poptest,2500,speed=.6,p=c(1,1),di=2,i0=1,visu=F)$timeseries[,2])
+neutral=replicate(50,abmSIR(poptest,2500,speed=c(1,.2),p=c(1,1),di=2,i0=1,visu=F)$timeseries[,2])
 twiceless=replicate(50,abmSIR(poptest,2500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=.5)$timeseries[,2])
 tenless=replicate(50,abmSIR(poptest,2500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=.5)$timeseries[,2])
 
@@ -102,7 +102,8 @@ simuDimanche<-function(){
 simuWithRecoverTime <- function(i){
     xsize=ysize=100
     poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
-    a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=5,xsize=xsize,ysize=ysize,visu=T,ap=T,ts=T)
+	poptest[, "behavior"]=B
+    a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=T,ap=F,ts=T)
     #neutral=lapply(1:100,function(j){print(j);abmSIR(poptest,1000,p=c(1,1),di=2,i0=1,visu=F,inf=1,sat=20,xsize=xsize,ysize=ysize)}$timeseries[,2])
     #baseline=mean(lapply(neutral,max))
     timeA=mean(sapply(neutral,sapply,getTimeMaxTotal))
@@ -391,9 +392,9 @@ printSigmoid  <- function(){
     #allparameter=expand.grid(inf=inf,inf_r=inf_r,sat=sat,sat_r=sat_r,pind=pind)
     allparameter=expand.grid(inf=inf,sat=sat,pind=pind)
     xsize=ysize=100
-    poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
+    poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,behavior=rep(G,500) )
     old <- Sys.time() 
-    a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=T,ap=F,ts=T,file=F,p_i=.5)
+    a=abmSIR(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=T,ap=F,ts=T,file=F,p_i=.5)
     print(Sys.time()-old )
 
     color.gradient <- function(x, colors=c("red","yellow","green"), colsteps=100) {
@@ -463,31 +464,7 @@ dev.off()
 
     plot(test$sat,test$scores,log="x")
 
-    clrssat=colorRampPalette(c("blue","red"))(10)
 
-    plotQuartiles <- function(allres,ylim=NULL,...){
-        if(is.null(ylim))ylim=range(allres)
-        plot(1,1,type="n",ylim=ylim,xlim=range(test$inf),...)
-        lapply(1:length(allres),function(i){
-               ai=allres[[i]]
-               lines(unique(test$inf),ai[2,],col=clrssat[i],pch=20,type="b",cex=.8)
-               arrows(unique(test$inf),ai[1,],unique(test$inf),ai[3,],col=clrssat[i],angle=90,code=3,length=.01,lwd=1)
-    })
-    }
-
-    png("5e8779c56517890001536101/figures/exploringIndividualLearning.png",width=1000,height=1000,pointsize=25)
-    par(mfrow=c(3,3))
-    for(p_i in unique(allresults$pind)){
-        test=allresults[allresults$pind == p_i ,]
-        a=lapply(unique(test$sat),function(s){ sapply(unique(test$inf),function(i)quantile(test$scores[test$inf ==i & test$sat== s])[2:4])})
-        b=lapply(unique(test$sat),function(s){ sapply(unique(test$inf),function(i)quantile(test$time_max[test$inf ==i & test$sat== s])[2:4])})
-        c=lapply(unique(test$sat),function(s){ sapply(unique(test$inf),function(i)quantile(test$max_inf[test$inf ==i & test$sat== s])[2:4])})
-        plotQuartiles(a,xlab="inp",ylab="score",main=paste("proba individual learning=",p_i))
-        plotQuartiles(b,xlab="inp",ylab="time to max",main=paste("proba individual learning=",p_i))
-        plotQuartiles(c,xlab="inp",ylab="max infected",main=paste("proba individual learning=",p_i))
-        legend("topleft",legend=paste0("steep=10^",round(log10(unique(test$sat)[c(1,5,10)]))),col=clrssat[c(1,5,10)],lty=1,cex=.6)
-    }
-    dev.off()
 
     test=allresults[allresults$score > 600 & allresults$max_infect < 250,]
     test=allresults[allresults$score <1,]
