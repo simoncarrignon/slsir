@@ -327,6 +327,93 @@ for(d in nvl){
 
 
 
+save(file="worst.bin",worst)
+save(file="best.bin",best)
+
+
+
+load("best.bin")
+load("worst.bin")
+xsize=ysize=100
+library(parallel)
+cl <- makeForkCluster(6,outfile="")
+neutralGood=parSapply(cl,1:500,function(i){
+                      print(i);
+                         simu=abmSIR(500,1500,p=c(1,1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                     inf=9,
+                                     sat=1000,
+                                     p_i=1,
+                                     strategy="random",
+                                     ts=T,ap=F,visu=F
+                                     )$timeseries[,2]
+
+})
+save(file="neutralGood.bin",neutralGood)
+
+neutralBad=parSapply(cl,1:500,function(i){
+                     print(i);
+                     simu=abmSIR(500,1500,p=c(.1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                 inf=9,
+                                 sat=1000,
+                                 p_i=1,
+                                 strategy="random",
+                                 ts=T,ap=F,visu=F
+                                 )$timeseries[,2]
+
+})
+save(file="neutralBad.bin",neutralBad)
+
+
+repetBest=parSapply(cl,1:500,function(i){
+                    j=sample(nrow(best),1);print(paste(i,j));
+                    simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                inf=best$inf[j],
+                                sat=best$sat[j],
+                                inf_r=best$inf_r[j],
+                                sat_r=best$sat_r[j],
+                                p_i=best$pind[j],
+                                sl_rad=best$sl_rad[j],
+                                strategy="random",
+                                ts=T,ap=F,visu=F
+                                )$timeseries[,2]
+})
+save(file="repetBest.bin",repetBest)
+
+repetWorst=parSapply(cl,1:500,function(i){
+                    j=sample(nrow(worst),1);print(paste(i,j));
+                    simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                inf=worst$inf[j],
+                                sat=worst$sat[j],
+                                inf_r=worst$inf_r[j],
+                                sat_r=worst$sat_r[j],
+                                p_i=worst$pind[j],
+                                sl_rad=worst$sl_rad[j],
+                                strategy="random",
+                                ts=T,ap=F,visu=F
+                                )$timeseries[,2]
+})
+save(file="repetWorst.bin",repetWorst)
+
+
+stopCluster(cl)
+pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(G,500))
+cl <- makeForkCluster(6,outfile="")
+neutralGoodG=parSapply(cl,1:500,function(i){
+                      print(i);
+                         simu=abmSIR(1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
+                                     pop=pop,
+                                     inf=9,
+                                     sat=1000,
+                                     p_i=1,
+                                     strategy="random",
+                                     ts=T,ap=F,visu=F
+                                     )$timeseries[,2]
+
+})
+save(file="neutralGoodG.bin",neutralGoodG)
+stopCluster(cl)
+
+>>>>>>> 4749fe46c3b6bb2ea33162ed569370e5c9f464d1
 
 load("cydia/neutralBad.bin")
 load("cydia/neutralGood.bin")
