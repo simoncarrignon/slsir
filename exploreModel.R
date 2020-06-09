@@ -502,28 +502,6 @@ apply(repetBestDos,2,function(i)lines(i,col=alpha("red",.1),lwd=2))
 legend("topright",legend=c("Revert","No revert"),col=c("red","green"),lwd=2)
 dev.off()
 
-png("5e8779c56517890001536101/figures/meanTrajIllu.png",width=800,height=800,pointsize=17)
-plot(1,1,type="n",ylim=c(0,500),xlim=c(1,1500),ylab="number of infected people",xlab="time")
-legend("topright",legend=c("No social distancing","Social distancing"),fill=c("red","green"))
-meanGood=apply(neutralGood,1,mean)
-meanBad=apply(neutralbad,1,mean)
-polygon(c(0:1500),meanGood,col=alpha("green",.5),border=NA)
-polygon(c(0:1500),meanBad,col=alpha("red",.5),border=NA)
-lines(meanGood,col=alpha("green",.9),lwd=2)
-lines(meanBad,col=alpha("red",.9),lwd=2)
-abline(h=max(meanBad),lty=2,col="red")
-abline(v=which.max(meanBad),lty=2,col="red")
-abline(h=max(meanGood),lty=2,col="green")
-abline(v=which.max(meanGood),lty=2,col="green")
-text(paste("max infected=",round(max(meanBad))),x=1500,y=max(meanBad)+10,pos=2)
-mtext(paste("time max=",round(which.max(meanBad))),at=which.max(meanBad),adj=1)
-text(paste("max infected=",round(max(meanGood))),x=1500,y=max(meanGood)+10,pos=2)
-mtext(paste("time max=",round(which.max(meanGood))),at=which.max(meanGood),adj=0)
-abline(v=which.max(meanBad),lty=2,col="red")
-abline(h=max(meanGood),lty=2,col="green")
-abline(v=which.max(meanGood),lty=2,col="green")
-dev.off()
-
 
 
 png("5e8779c56517890001536101/figures/fullTrajHDR.png",width=800,height=400,pointsize=17)
@@ -562,27 +540,4 @@ allresults=do.call("rbind",aa)
 allresults=allresults[-which(allresults$max_infect <4),]
 allresults$scores=(1-bscore(allresults$time_max) + bscore(allresults$max_infect))/2
 
-
-for(d in c(.8,.6,.4,.25)){
-png(paste0("5e8779c56517890001536101/figures/posterior2d_",d*10,".png"),width=1100,height=333,pointsize=20)
-best=allresults[allresults$scores<d,]
-par(mfrow=c(1,4))
-hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols="blue",xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="rever steepness")
-hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols="yellow",xlim=c(0,1),ylim=c(-1,3),xlab="inflexion point",ylab="steepness")
-hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols="red",xlim=c(0,1),ylim=c(0,1),xlab="inflexion point",ylab="individual learning")
-hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols="green",xlim=c(-1,3),ylim=c(0,1),xlab="steepness",ylab="individual learning")
-dev.off()
-}
-
-hdr.boxplot.2d(log(best$sat_r),best$pind,prob=c(50,75,95))
-
-pdf("posterior1d.pdf",width=12,height=12)
-par(mfrow=c(3,2))
-plot(density(best$pind,from=0,to=1),xlim=c(0,1))
-plot(1,1,type="n")
-plot(density(best$inf,from=0,to=1),xlim=c(0,1))
-plot(density(best$inf_r,from=0,to=1),xlim=c(0,1))
-plot(density(log10(best$sat),from=-1,to=3),xlim=c(-1,3))
-plot(density(log10(best$sat_r),from=-1,to=3),xlim=c(-1,3))
-dev.off()
 
