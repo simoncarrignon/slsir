@@ -25,10 +25,10 @@ xsize=ysize=100
 
 nsim=nsm
 
-inf=runif(nsim,0,1)
-inf_r=runif(nsim,0,1)
-sat=10^runif(nsim,-1,3)
-sat_r=10^runif(nsim,-1,3)
+inf=runif(nsim,0,.2)
+inf_r=runif(nsim,.9,1)
+sat=10^runif(nsim,-1,0)
+sat_r=10^runif(nsim,2,3)
 pind=runif(nsim)
 sl_rad=sample(100,nsim,replace=T)
 
@@ -36,7 +36,7 @@ sl_rad=sample(100,nsim,replace=T)
 allparameter=cbind.data.frame(inf=inf,sat=sat,inf_r=inf_r,sat_r=sat_r,pind=pind,sl_rad=sl_rad)
 
 
-pg=0
+pg=.5
 behave=rep(c(G,B),500*c(pg,1-pg))
 
 cl <- makeForkCluster(ns,outfile="")
@@ -53,7 +53,7 @@ allsummary=parSapply(cl,1:nsim,function(j)
                                      p_i=allparameter$pind[j],
                                      sl_rad=allparameter$sl_rad[j],
                                      strategy="best",
-                                     ts=T,ap=F,visu=F,bt=0
+                                     ts=T,ap=F,visu=F
                                      )
                          #save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
                          max_infect=max(simu$timeseries[,2])
