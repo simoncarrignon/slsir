@@ -30,27 +30,48 @@ inf_r=runif(nsim,0,1)
 sat=10^runif(nsim,-1,3)
 sat_r=10^runif(nsim,-1,3)
 pind=runif(nsim)
-sl_rad=sample(c(0,2:(xsize/2)),nsim,replace=T)
+sl_rad=sample(100,nsim,replace=T)
 
 #allparameter=expand.grid(inf=inf,inf_r=inf_r,sat=sat,sat_r=sat_r,pind=pind)
 allparameter=cbind.data.frame(inf=inf,sat=sat,inf_r=inf_r,sat_r=sat_r,pind=pind,sl_rad=sl_rad)
+
+
+pg=0
+behave=rep(c(G,B),500*c(pg,1-pg))
 
 cl <- makeForkCluster(ns,outfile="")
 allsummary=parSapply(cl,1:nsim,function(j)
                      {
                          print(paste("sim #",j,"/",nsim));
-                         simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                         pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=behave)
+                         simu=abmSIR(1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                     pop=pop,
                                      inf=allparameter$inf[j],
                                      sat=allparameter$sat[j],
                                      inf_r=allparameter$inf_r[j],
                                      sat_r=allparameter$sat_r[j],
                                      p_i=allparameter$pind[j],
                                      sl_rad=allparameter$sl_rad[j],
-                                     strategy="random",
-                                     ts=T,ap=F,visu=F
+                                     strategy="best",
+                                     ts=T,ap=F,visu=F,bt=0
                                      )
                          #save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
-                         c(time_max=which.max(simu$timeseries[,2]),final_size=sum(simu$timeseries[1500,2:3]),max_infect=max(simu$timeseries[,2]))
+                         max_infect=max(simu$timeseries[,2])
+                         max_infect150=max(simu$timeseries[1:150,2])
+                         max_infect250=max(simu$timeseries[1:250,2])
+                         c(
+                           max_infect=max_infect,
+                           max_infect150=max_infect150,
+                           max_infect250=max_infect250,
+                           time_max=which.max(simu$timeseries[,2]),
+                           time_max2=which.max(simu$timeseries[,2]>=(max_infect/2)),
+                           time_max4=which.max(simu$timeseries[,2]>=(max_infect/4)),
+                           time_max150=which.max(simu$timeseries[,2]>=(max_infect150)),
+                           time_max250=which.max(simu$timeseries[,2]>=(max_infect250)),
+                           final_size=sum(simu$timeseries[1500,2:3]),
+                           size150=sum(simu$timeseries[150,2:3]),
+                           size250=sum(simu$timeseries[250,2:3])
+                           )
                      }
 )
 
