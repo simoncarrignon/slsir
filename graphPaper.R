@@ -245,8 +245,8 @@ save(file="best.bin",best)
 
 
 
-load("best.bin")
-load("worst.bin")
+best=readRDS("best.bin")
+worst=readRDS("worst.bin")
 xsize=ysize=100
 library(parallel)
 cl <- makeForkCluster(6,outfile="")
@@ -256,7 +256,7 @@ neutralGood=parSapply(cl,1:500,function(i){
                                      inf=9,
                                      sat=1000,
                                      p_i=1,
-                                     strategy="random",
+                                     strategy="best",
                                      ts=T,ap=F,visu=F
                                      )$timeseries[,2]
 
@@ -269,7 +269,7 @@ neutralBad=parSapply(cl,1:500,function(i){
                                  inf=9,
                                  sat=1000,
                                  p_i=1,
-                                 strategy="random",
+                                 strategy="best",
                                  ts=T,ap=F,visu=F
                                  )$timeseries[,2]
 
@@ -286,7 +286,7 @@ repetBest=parSapply(cl,1:500,function(i){
                                 sat_r=best$sat_r[j],
                                 p_i=best$pind[j],
                                 sl_rad=best$sl_rad[j],
-                                strategy="random",
+                                strategy="best",
                                 ts=T,ap=F,visu=F
                                 )$timeseries[,2]
 })
@@ -301,7 +301,7 @@ repetWorst=parSapply(cl,1:500,function(i){
                                 sat_r=worst$sat_r[j],
                                 p_i=worst$pind[j],
                                 sl_rad=worst$sl_rad[j],
-                                strategy="random",
+                                strategy="best",
                                 ts=T,ap=F,visu=F
                                 )$timeseries[,2]
 })
