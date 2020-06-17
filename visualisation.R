@@ -1,5 +1,7 @@
 require(RColorBrewer)
 
+#' @param allpop a list of populations for a serie of timesteps
+#' @param file if TRUE, the ouput is written in a file (instead of being show in the screen)
 visualize <- function(allpop,timeseries,xsize,ysize,file=F){
     if(file)png(sprintf("frame_%04d.png",nrow(timeseries)),width=1200,height=900)
     pop=c()
@@ -30,3 +32,19 @@ else{
     if(file)dev.off()
 }
 
+
+getConcernedByAge <- function(pop)tapply(pop[,"behavior"],pop[,"ages"],function(a)c(A=sum(a==G)/length(a)))
+getConcerned <- function(pop)c(A=sum(pop[,"behavior"]==G)/nrow(pop))
+getSick <- function(pop)c(A=sum(pop[,"health"]==I)/nrow(pop))
+
+#' @param allpop a list of populations for a serie of timesteps
+plotConcernByAge <- function(allpop){
+    allpop=a$allpop
+    #plot(1,1,type="n",xlim=c(0,length(allpop)),xlim=c(0,nrow(allpop[[1]])),xlab="time",ylab="%pop")
+    plot(1,1,type="n",xlim=c(0,length(allpop)),ylim=c(0,1),xlab="time",ylab="%pop")
+    concerned <- sapply(allpop,getConcerned)
+    plot(apply(sapply(tenSocialLearner,sapply,getSick),1,mean),type="l")
+    lines(apply(sapply(tenSocialLearner,sapply,getConcerned),1,mean),type="l")
+
+
+}
