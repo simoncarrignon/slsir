@@ -11,17 +11,19 @@ names(sir)=c("S","I","R")
 
 #' @param N the number of agents
 #' @param tstep the duration of the simualtion
-#' @param p the probability for one agent to transmit the disease to another one
-#' @param p_i the probability for one agent to learn socially
-#' @param di the distance between to agent under which the disease cna be transmitted
-#' @param i0 the number of initial infection
-#' @param speed the speed of the agents
+#' @param p the probability for one agent to transmit the disease to another one. This can be a single value, in that case the probability is the same for all agent, or a vector of probabilities, in which case the vector represents the probability of transmission for different behaviors. If the p is a vector a column of bheavior should be present in pop.
+#' @param p_i the probability for one agent to learn individually. 
+#' @param di the distance between two agents under which the disease can be transmitted
+#' @param i0 the number of initial infections
+#' @param speed the speed at which agents move
 #' @param reco time for agent to Recover
 #' @param visu TRUE or FALSE, if output should be plotted
+#' @param log TRUE or FALSE, if a simple log (number of time step) should be outputed
 #' @param sat speed of saturation of the sigmoid
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
-#' @param ap keep and return the full population for each time step
+#' @param ap keep and return the full population for each time step, this can slow the model a lot
+#' @param file if TRUE, the ouput is written in a file (instead of being show in the screen)
 abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,file=F,strategy="all",sl_rad=10,bt=150){
 
     if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
