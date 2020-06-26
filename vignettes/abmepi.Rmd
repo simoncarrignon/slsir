@@ -15,7 +15,6 @@ output:
 # Centralize preliminary results
 
 ```{r,include=F}
-source("abmEpi.R")
 
     allExpe=c("norevert","revert","revertLessSteep","norevertLessSteep" )
     names(allExpe)=allExpe
