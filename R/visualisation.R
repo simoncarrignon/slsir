@@ -9,7 +9,6 @@ require(RColorBrewer)
 #' @param width width of output file
 #' @param height height of output file
 visualize <- function(allpop,timeseries,xsize,ysize,foldername=FALSE,width=1200,height=900){
-    print(file.path(foldername,sprintf("frame_%04d.png",nrow(timeseries))))
     if(is.character(foldername))png(file.path(foldername,sprintf("frame_%04d.png",nrow(timeseries))),width=width,height=height)
     pop=c()
     if(is.null(dim(allpop)))pop=allpop[[length(allpop)]]

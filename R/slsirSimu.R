@@ -26,8 +26,9 @@ names(sir)<-c("S","I","R")
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step, this can slow the model a lot
+#' @param strategy which social learning will be used (ie which agents will be copied)
 #' @param foldername if a string, the output is written in a file (instead of being show in the screen) and the string is used as the name of the folder
-slsirSimu <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,foldername=F,strategy="all",sl_rad=10,bt=150){
+slsirSimu <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,foldername=F,strategy="all",sl_rad=10,bt=0,recover=10){
 
     if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
         pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
@@ -161,7 +162,7 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
     }
 	if(is.null(rep))stop()
     ages=rep(names(agedistrib),agedistrib*N)
-    if(sum(prop.table(table(ages))-agedistrib))stop()
+    if(sum(prop.table(table(ages))-agedistrib))stop("pop not big enough given age distribution")
 
     if(is.null(behavior))behavior=rep(B,N) #by default start with everyone as Bad
 
