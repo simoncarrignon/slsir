@@ -6,7 +6,7 @@ This package wrap up all function and analyses done for the [this paper](https:/
 To install and test the function:
 ```
 install.packages("devtools")
-devtools::install_github("robjhyndman/hdrcde")
+devtools::install_github("simoncarrignon/slsir")
 ```
 
 Soon `vignettes/` will store the different vignette to reproduce the different analysis and figures used in [the paper](https://www.medrxiv.org/content/10.1101/2020.06.08.20126029v1)
