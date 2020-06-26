@@ -1,0 +1,52 @@
+---
+title: "Intro to SLSIR package"
+output:
+    html_document:
+        code_folding: show 
+        section_numbers: true
+        toc: true
+        toc_depth: 4
+        toc_float: true
+---
+```{r,include=FALSE}
+library(devtools)
+load_all(".")
+```
+
+
+
+# Introduction to the SLSIR package:
+
+The simplest way to run a simulation is to use:
+
+```{r,eval=F}
+   simpleSimu=slsirSimu(pop=100,tstep=150)
+```
+
+The output of the simulation can be visualised by adding:
+
+```{r simpleVisu,animation.hook="gifski",interval=0.05, aniopts="controls,loop",eval=FALSE}
+   simpleSimu=slsirSimu(pop=100,tstep=150,visu=T)
+```
+In this visualisation, light blue squares represent agents conforming to social distancing, blue circle represent agents not conforming to social distancingcircle agents 
+
+A more conveniant way to do a simulatoin, used in the paper, is to generate the population using `generatePopulation` as follow:
+```{r}
+    pop=generatePopulation(N=100,xsize=100,ysize=100,speed=1,recovery=1)
+```
+This will create a table with all information about the population:
+
+```{r,echo=F}
+    rmarkdown::paged_table(as.data.frame(pop))
+```
+
+Then the properties of the population can be adjusted 
+
+```{r}
+    pop[c(10:20),"speed"]=5 #agents 10 to 20 will go five time more quiclkly than all other agents
+```
+
+```{r}
+   simpleSimu=slsirSimu(pop=pop,tstep=150,visu=T)
+```
+
