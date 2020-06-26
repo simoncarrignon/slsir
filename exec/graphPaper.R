@@ -339,7 +339,7 @@ library(parallel)
 cl <- makeForkCluster(6,outfile="")
 neutralGood=parSapply(cl,1:500,function(i){
                       print(i);
-                         simu=abmSIR(500,1500,p=c(1,1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                         simu=slsirSimu(500,1500,p=c(1,1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
                                      inf=9,
                                      sat=1000,
                                      p_i=1,
@@ -352,7 +352,7 @@ save(file="neutralGood.bin",neutralGood)
 
 neutralBad=parSapply(cl,1:500,function(i){
                      print(i);
-                     simu=abmSIR(500,1500,p=c(.1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                     simu=slsirSimu(500,1500,p=c(.1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
                                  inf=9,
                                  sat=1000,
                                  p_i=1,
@@ -366,7 +366,7 @@ save(file="neutralBad.bin",neutralBad)
 
 repetBest=parSapply(cl,1:500,function(i){
                     j=sample(nrow(best),1);print(paste(i,j));
-                    simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                    simu=slsirSimu(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
                                 inf=best$inf[j],
                                 sat=best$sat[j],
                                 inf_r=best$inf_r[j],
@@ -381,7 +381,7 @@ save(file="repetBest.bin",repetBest)
 
 repetWorst=parSapply(cl,1:500,function(i){
                     j=sample(nrow(worst),1);print(paste(i,j));
-                    simu=abmSIR(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                    simu=slsirSimu(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
                                 inf=worst$inf[j],
                                 sat=worst$sat[j],
                                 inf_r=worst$inf_r[j],
@@ -400,7 +400,7 @@ pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c
 cl <- makeForkCluster(6,outfile="")
 neutralGoodG=parSapply(cl,1:500,function(i){
                       print(i);
-                         simu=abmSIR(1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
+                         simu=slsirSimu(1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
                                      pop=pop,
                                      inf=9,
                                      sat=1000,

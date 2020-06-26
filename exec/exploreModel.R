@@ -2,20 +2,20 @@
 source("abmEpi.R")
 
 poptest=generatePopulation(500,recovery=2500) 
-neutral=replicate(50,abmSIR(poptest,2500,speed=c(1,.2),p=c(1,1),di=2,i0=1,visu=F)$timeseries[,2])
-twiceless=replicate(50,abmSIR(poptest,2500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=.5)$timeseries[,2])
-tenless=replicate(50,abmSIR(poptest,2500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=.5)$timeseries[,2])
+neutral=replicate(50,slsirSimu(poptest,2500,speed=c(1,.2),p=c(1,1),di=2,i0=1,visu=F)$timeseries[,2])
+twiceless=replicate(50,slsirSimu(poptest,2500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=.5)$timeseries[,2])
+tenless=replicate(50,slsirSimu(poptest,2500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=.5)$timeseries[,2])
 
-neutral=apply(replicate(50,abmSIR(poptest,1500,speed=.6,p=c(1,1),di=2,i0=1,visu=F)$timeseries[,2]),1,mean)
-twiceless=apply(replicate(50,abmSIR(poptest,1500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=.5)$timeseries[,2]),1,mean)
-tenless=apply(replicate(50,abmSIR(poptest,1500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=.5)$timeseries[,2]),1,mean)
+neutral=apply(replicate(50,slsirSimu(poptest,1500,speed=.6,p=c(1,1),di=2,i0=1,visu=F)$timeseries[,2]),1,mean)
+twiceless=apply(replicate(50,slsirSimu(poptest,1500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=.5)$timeseries[,2]),1,mean)
+tenless=apply(replicate(50,slsirSimu(poptest,1500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=.5)$timeseries[,2]),1,mean)
 
 probas=seq(0.1,1,.1)
 inpoint=c(0.1,.5,.9)
 library(parallel)
 cl <- makeForkCluster(40,outfile="")
-all=lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:300,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=20)}$timeseries[,2])))
-tenless=lapply(inpoint,function(i)apply(parSapply(cl,1:300,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=i,sat=50)}$timeseries[,2]),1,quantile))
+all=lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:300,function(j){print(j);slsirSimu(poptest,1500,speed=.6,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=20)}$timeseries[,2])))
+tenless=lapply(inpoint,function(i)apply(parSapply(cl,1:300,function(j){print(j);slsirSimu(poptest,1500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=i,sat=50)}$timeseries[,2]),1,quantile))
 stopCluster(cl)
 
 cols=heat.colors(length(inpoint))
@@ -27,10 +27,10 @@ apply(tenless,2,lines,col="red")
 
 simuAndVisuFriday2703<-function(){
     poptest=generatePopulation(500)
-    neutral=apply(replicate(50,abmSIR(poptest,1500,speed=.6,p=c(.2,.2),di=2,i0=1,visu=F)$timeseries[,2]),1,mean)
+    neutral=apply(replicate(50,slsirSimu(poptest,1500,speed=.6,p=c(.2,.2),di=2,i0=1,visu=F)$timeseries[,2]),1,mean)
     inpoint=seq(0,1,.1)
-    twiceless=sapply(inpoint,function(i)apply(sapply(1:30,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=i,sat=50)}$timeseries[,2]),1,mean))
-    tenless=sapply(inpoint,function(i)apply(sapply(1:30,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=i,sat=50)}$timeseries[,2]),1,mean))
+    twiceless=sapply(inpoint,function(i)apply(sapply(1:30,function(j){print(j);slsirSimu(poptest,1500,speed=.6,p=c(1,.5),di=2,i0=1,visu=F,inf=i,sat=50)}$timeseries[,2]),1,mean))
+    tenless=sapply(inpoint,function(i)apply(sapply(1:30,function(j){print(j);slsirSimu(poptest,1500,speed=.6,p=c(1,.1),di=2,i0=1,visu=F,inf=i,sat=50)}$timeseries[,2]),1,mean))
 
     cols=colorRampPalette(c("blue","red"))(length(inpoint))
     names(cols)=as.character(inpoint)
@@ -51,7 +51,7 @@ simuDimanche<-function(){
     inpoint=c(0.1,.5,.9)
 
     ## generate all simu
-    allres=lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:300,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=20)}$timeseries[,2])))
+    allres=lapply(probas,function(p)lapply(inpoint,function(i)parLapply(cl,1:300,function(j){print(j);slsirSimu(poptest,1500,speed=.6,p=c(1,p),di=2,i0=1,visu=F,inf=i,sat=20)}$timeseries[,2])))
 
     clrsprobs=colorRampPalette(c("blue","red"))(length(probas))
     clrsinp=colorRampPalette(c("green","yellow"))(length(inpoint))
@@ -63,7 +63,7 @@ simuDimanche<-function(){
     neutral=do.call("cbind",neutral)
     neutral=apply(neutral,1,mean)
 
-    neutral=lapply(1:300,function(j){print(j);abmSIR(poptest,1500,speed=.6,p=c(1,1),di=2,i0=1,visu=F,inf=1,sat=20)}$timeseries[,2])
+    neutral=lapply(1:300,function(j){print(j);slsirSimu(poptest,1500,speed=.6,p=c(1,1),di=2,i0=1,visu=F,inf=1,sat=20)}$timeseries[,2])
 
     #Visualize
 
@@ -103,8 +103,8 @@ simuWithRecoverTime <- function(i){
     xsize=ysize=100
     poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
 	poptest[, "behavior"]=B
-    a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,p_i=.01)
-    #neutral=lapply(1:100,function(j){print(j);abmSIR(poptest,1000,p=c(1,1),di=2,i0=1,visu=F,inf=1,sat=20,xsize=xsize,ysize=ysize)}$timeseries[,2])
+    a=slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,p_i=.01)
+    #neutral=lapply(1:100,function(j){print(j);slsirSimu(poptest,1000,p=c(1,1),di=2,i0=1,visu=F,inf=1,sat=20,xsize=xsize,ysize=ysize)}$timeseries[,2])
     #baseline=mean(lapply(neutral,max))
     timeA=mean(sapply(neutral,sapply,getTimeMaxTotal))
     timeB=mean(sapply(neutral,sapply,getTimeMaxInfected))
@@ -394,8 +394,8 @@ printSigmoid  <- function(){
     xsize=ysize=100
     poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,behavior=rep(G,500) )
     old <- Sys.time() 
-    a=abmSIR(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file="test",p_i=.5)
-    b=abmSIR(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,strategy="best")
+    a=slsirSimu(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file="test",p_i=.5)
+    b=slsirSimu(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,strategy="best")
     plot(a$timeseries[,2])
     lines(b$timeseries[,2])
     print(Sys.time()-old )
@@ -478,11 +478,11 @@ dev.off()
     plot(test$sat,test$inf,log="x",col=alpha(color.gradient(test$pind,c("blue","red")),.2),main="indiv learning",pch=20)
 
 
-repetBest=sapply(1:100,function(i){print(i);abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=1,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
-repetBestDos=parSapply(cl,1:100,function(i){print(i);abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
-neutralbad=sapply(1:10,function(i){print(i);abmSIR(poptest,1500,p=c(1,1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
+repetBest=sapply(1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=1,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
+repetBestDos=parSapply(cl,1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
+neutralbad=sapply(1:10,function(i){print(i);slsirSimu(poptest,1500,p=c(1,1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
 cl <- makeForkCluster(3,outfile="")
-neutralGood=parSapply(cl,1:100,function(i){print(i);abmSIR(poptest,1500,p=c(.1,.1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
+neutralGood=parSapply(cl,1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(.1,.1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
 stopCluster(cl)
 
 neutralbadList=lapply(1:nrow(neutralbad),function(i)neutralbad[i,])   
@@ -549,10 +549,10 @@ behavioralChanges <- function(){
     pg=.00
     behave=rep(c(G,B),500*c(pg,1-pg))
     poptest[, "behavior"]=behave
-    tenSocialLearner=replicate(10,abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,ts=F,log=T,p_i=.01))
-    tenIndividualLearner=replicate(10,abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,log=T,ts=F,p_i=.99))
-    oneSocialLearner=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,ts=F,log=T,p_i=.01)
-    oneIndividualLearner=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,log=T,ts=T,p_i=.99)
+    tenSocialLearner=replicate(10,slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,ts=F,log=T,p_i=.01))
+    tenIndividualLearner=replicate(10,slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,log=T,ts=F,p_i=.99))
+    oneSocialLearner=slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,ts=F,log=T,p_i=.01)
+    oneIndividualLearner=slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,log=T,ts=T,p_i=.99)
 
     par(mfrow=c(3,2),mar=c(5,5,1,1))
     concerned=sapply(oneSocialLearner$allpop,getConcerned)
