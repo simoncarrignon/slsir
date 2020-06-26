@@ -1,0 +1,176 @@
+
+---
+title: "Report EPICULTURE ABM"
+output:
+    html_document:
+        code_folding: hide
+        section_numbers: true
+        toc: true
+        toc_depth: 4
+        toc_float: true
+---
+
+
+
+# Centralize preliminary results
+
+```{r,include=F}
+source("abmEpi.R")
+
+    allExpe=c("norevert","revert","revertLessSteep","norevertLessSteep" )
+    names(allExpe)=allExpe
+    allMeans=lapply( allExpe,function(i)
+                    {
+                        load(paste0("",i,".bin"))
+                        infected=lapply(get(i),lapply,lapply,lapply,function(r)r$timeseries[,2])
+                        table_i=lapply(infected,lapply,lapply,function(r)do.call("cbind",r))
+                        mean_i=lapply(table_i,lapply,lapply,function(r)apply(r,1,mean))
+                    }
+    )
+
+    allVar=lapply( allExpe,function(i)
+                    {
+                        load(paste0("oldbin/",i,".bin"))
+                        infected=lapply(get(i),lapply,lapply,lapply,function(r)r$timeseries[,2])
+                        table_i=lapply(infected,lapply,lapply,function(r)do.call("cbind",r))
+                        var_i=lapply(table_i,lapply,lapply,function(r)apply(r,1,var))
+                    }
+    )
+
+    load("oldbin/neutral.bin")
+    neutralVar=apply(do.call("cbind",lapply(neutral,function(u)u$timeseries[,2])),1,var)
+    neutral=apply(do.call("cbind",lapply(neutral,function(u)u$timeseries[,2])),1,mean)
+    load("neutralBest")
+    neutralBestVar=apply(do.call("cbind",lapply(neutralBest,function(u)u$timeseries[,2])),1,var)
+    neutralBest=apply(do.call("cbind",lapply(neutralBest,function(u)u$timeseries[,2])),1,mean)
+    
+```
+
+
+## Individual Learning Function
+
+A sigmoid function `sig`:
+
+$$ p \sim \frac{1}{1+e^{-stp\times(x-inp)}} $$
+
+```{r}
+    pdf("5e8779c56517890001536101/figures/illuSig.pdf",width=8,height=5)
+    par(mfrow=c(1,2))
+    x=seq(0,1,.01)   
+    inp=seq(0,1,.1)   
+    clrs=colorRampPalette(c("dark green","yellow"))(length(inp))
+    plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),ylab="sig(x,st=0.001,inp)",main=expression(inp %in%  "(" * list(0,1) * ")") )
+    for(i in 1:length(inp)) lines(x,sig(x,b=inp[i]),ylim=c(0,1),xlim=c(0,1),col=clrs[i],lwd=2) 
+    leg=seq(1,length(inp),length.out=3)
+    legend("bottomright",legend=paste("inp=",inp[leg]),col=clrs[leg],lwd=2)
+
+    tstp=20
+    stp=seq(-3,3,length.out=tstp)   
+    clrs=colorRampPalette(c("dark green","yellow"))(tstp)
+    plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),ylab="sig(x,st,inp=.5)",main=bquote(stp %in% "(" * list(10^.(stp[1]),10^.(stp[tstp])) * ")") )
+    for(i in 1:length(stp)) lines(x,sig(x,a=10^stp[i]),ylim=c(0,1),xlim=c(0,1),col=clrs[i],lwd=2) 
+    leg=seq(1,tstp,length.out=4)
+    legend("bottomright",legend=paste("stp=10^",round(stp[leg])),col=clrs[leg],lwd=2)
+    dev.off()
+```
+
+## Mean and variance of infected people through time
+
+```{r}
+    inpoint=c(0.01,.5)
+    probas=c(0.1,.4)
+    psoc=c(0,.1,.5)
+    tstep=500
+    clrs=colorRampPalette(c("dark green","green"))(length(psoc))
+```
+
+
+### High steepness (stp = 20)
+
+#### Mean: 
+
+```{r,fig.width=10,fig.height=10}
+par(mfrow=c(2,2))
+for(u in c(1,2)){
+    for( i  in c(1,2)){
+        plot(neutral,type="l",xlim=c(1,1500),ylim=c(0,500),main=bquote(P*i[B]==.(1/probas[i])*P*i[G] ~ inp == .(inpoint[u]) ~ stp == 20),xlab="#time",ylab="#infected",lwd=2,col="red")
+        for(p_soc in 1:length(psoc)){
+            lines(neutralBest,col="blue")
+            lines(1:tstep,allMeans[["revert"]][[p_soc]][[i]][[u]],lty=1,col=clrs[p_soc],lwd=2)
+            lines(1:tstep,allMeans[["norevert"]][[p_soc]][[i]][[u]],lty=2,col=clrs[p_soc],lwd=2)
+        }
+        legend("topright",legend=c("neutral B","neutral G","revert","norevert",paste0("p_social=",psoc)),lty=c(1,1,1,2,rep(1,3)),col=c("red","blue",1,1,clrs),lwd=2)
+    }
+}
+
+```
+
+#### Variance:
+
+```{r,fig.width=10,fig.height=10}
+        par(mfrow=c(2,2))
+        for(u in c(1,2)){
+        for( i  in c(1,2)){
+        plot(neutral,type="l",xlim=c(1,1500),ylim=range(allVar),main=bquote(P*i[B]==.(1/probas[i])*P*i[G] ~ inp == .(inpoint[u]) ~ stp == 20),xlab="#time",ylab="#infected(var)",lwd=2,col="red")
+        for(p_soc in 1:length(psoc)){
+        lines(neutralBestVar,col="blue")
+        lines(1:tstep,allVar[["revert"]][[p_soc]][[i]][[u]],lty=1,col=clrs[p_soc],lwd=2)
+        lines(1:tstep,allVar[["norevert"]][[p_soc]][[i]][[u]],lty=2,col=clrs[p_soc],lwd=2)
+        }
+        legend("topright",legend=c("neutral B","neutral G","revert","norevert",paste0("p_social=",psoc)),lty=c(1,1,1,2,rep(1,3)),col=c("red","blue",1,1,clrs),lwd=2)
+        }
+        }
+
+```
+
+
+### Low steepness (stp = 5)
+
+#### Mean
+
+```{r,fig.width=10,fig.height=10}
+        par(mfrow=c(2,2))
+        for(u in c(1,2)){
+        for( i  in c(1,2)){
+        plot(neutral,type="l",xlim=c(1,1500),ylim=c(0,500),main=bquote(P*i[B]==.(1/probas[i])*P*i[G] ~ inp == .(inpoint[u]) ~ stp == 5),xlab="#time",ylab="#infected",lwd=2,col="red")
+        for(p_soc in 1:length(psoc)){
+        lines(neutralBest,col="blue")
+        lines(1:tstep,allMeans[["revertLessSteep"]][[p_soc]][[i]][[u]],lty=1,col=clrs[p_soc],lwd=2)
+        lines(1:tstep,allMeans[["norevertLessSteep"]][[p_soc]][[i]][[u]],lty=2,col=clrs[p_soc],lwd=2)
+        }
+        legend("topright",legend=c("neutral B","neutral G","revert","norevert",paste0("p_social=",psoc)),lty=c(1,1,1,2,rep(1,3)),col=c("red","blue",1,1,clrs),lwd=2)
+        }
+        }
+```
+
+
+#### Var
+
+```{r,fig.width=10,fig.height=10}
+        par(mfrow=c(2,2))
+        for(u in c(1,2)){
+        for( i  in c(1,2)){
+        plot(neutralVar,type="l",xlim=c(1,1500),ylim=range(allVar),main=bquote(P*i[B]==.(1/probas[i])*P*i[G] ~ inp == .(inpoint[u]) ~ stp == 5),xlab="#time",ylab="#infected(var)",col="red",lwd=2)
+        for(p_soc in 1:length(psoc)){
+        lines(neutralBestVar,col="blue")
+        lines(1:tstep,allVar[["revertLessSteep"]][[p_soc]][[i]][[u]],lty=1,col=clrs[p_soc],lwd=2)
+        lines(1:tstep,allVar[["norevertLessSteep"]][[p_soc]][[i]][[u]],lty=2,col=clrs[p_soc],lwd=2)
+        }
+        legend("topright",legend=c("neutral B","neutral G","revert","norevert",paste0("p_social=",psoc)),lty=c(1,1,1,2,rep(1,3)),col=c("red","blue",1,1,clrs),lwd=2)
+        }
+        }
+```
+
+## Animation
+
+Visualise a full simulation run with parameters:
+
+```{r,eval=F}
+xsize=ysize=100
+poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
+a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=5,xsize=xsize,ysize=ysize,visu=T,ap=T,ts=T)
+```
+
+<video width="1000" controls>
+  <source src="vid/test.mp4" type="video/mp4">
+  </video>
