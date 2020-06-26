@@ -1,5 +1,9 @@
 require(RColorBrewer)
 
+#' Output
+#' 
+#' plot population and other info
+#' 
 #' @param allpop a list of populations for a serie of timesteps
 #' @param foldername if a string, the output is written in a file (instead of being show in the screen) and the string is used as the name of the folder
 #' @param width width of output file

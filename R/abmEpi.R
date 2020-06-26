@@ -1,4 +1,3 @@
-source("visualisation.R")
 
 S<-1
 I<-2
@@ -9,6 +8,10 @@ B<-1
 sir<-c(1:3)
 names(sir)<-c("S","I","R")
 
+#' ABM SIR 
+#' 
+#' Main model
+#' 
 #' @param N the number of agents
 #' @param tstep the duration of the simualtion
 #' @param p the probability for one agent to transmit the disease to another one. This can be a single value, in that case the probability is the same for all agent, or a vector of probabilities, in which case the vector represents the probability of transmission for different behaviors. If the p is a vector a column of bheavior should be present in pop.
@@ -141,13 +144,16 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
 }
 
 
+#' Population initiliasation 
+#' 
+#' generate a population
+#' 
 #' @param N number of agents
 #' @param agedistrib a distribution defining the percentage of population represented in different age class
 #' @param recovery a distribution recovery time
 #' @param behavior a distribution of behaviors
 #' @param xsize spatial limits (to keep in the model?)
 #' @param ysize spatial limits 
-
 generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=100,recovery=NULL,speed=NULL){
     if(is.null(agedistrib)){
        agedistrib=c(.24,.09,.12,.26,.13,.16) #source: https://www.kff.org/other/state-indicator/distribution-by-age/
@@ -170,6 +176,10 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 }
 
 
+#' Sigmoid
+#' 
+#' sigmoid function to individual learning mecanisme  
+#' 
 #'@param
 #'@param a parameter to define the steepness of the sigmoid slope  
 #'@param b parameter to define when the slope starts
