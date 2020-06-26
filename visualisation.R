@@ -1,9 +1,12 @@
 require(RColorBrewer)
 
 #' @param allpop a list of populations for a serie of timesteps
-#' @param file if TRUE, the ouput is written in a file (instead of being show in the screen)
-visualize <- function(allpop,timeseries,xsize,ysize,file=F){
-    if(file)png(sprintf("frame_%04d.png",nrow(timeseries)),width=1200,height=900)
+#' @param foldername if a string, the output is written in a file (instead of being show in the screen) and the string is used as the name of the folder
+#' @param width width of output file
+#' @param height height of output file
+visualize <- function(allpop,timeseries,xsize,ysize,foldername=FALSE,width=1200,height=900){
+    print(file.path(foldername,sprintf("frame_%04d.png",nrow(timeseries))))
+    if(is.character(foldername))png(file.path(foldername,sprintf("frame_%04d.png",nrow(timeseries))),width=width,height=height)
     pop=c()
     if(is.null(dim(allpop)))pop=allpop[[length(allpop)]]
     else pop=allpop
@@ -29,7 +32,7 @@ else{
     plot(1:nrow(timeseries),timeseries[,4],col=4,type="l",lwd=2,ylim=c(0,N),xlab="time",ylab="# behavior")
     lines(1:nrow(timeseries),timeseries[,5],col=5,type="l",lwd=2)
 }
-    if(file)dev.off()
+    if(is.character(foldername))dev.off()
 }
 
 

@@ -1,13 +1,13 @@
 source("visualisation.R")
 
-S=1
-I=2
-R=3
-G=2
-B=1
+S<-1
+I<-2
+R<-3
+G<-2
+B<-1
 
-sir=c(1:3)
-names(sir)=c("S","I","R")
+sir<-c(1:3)
+names(sir)<-c("S","I","R")
 
 #' @param N the number of agents
 #' @param tstep the duration of the simualtion
@@ -23,12 +23,13 @@ names(sir)=c("S","I","R")
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step, this can slow the model a lot
-#' @param file if TRUE, the ouput is written in a file (instead of being show in the screen)
-abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,file=F,strategy="all",sl_rad=10,bt=150){
+#' @param foldername if a string, the output is written in a file (instead of being show in the screen) and the string is used as the name of the folder
+abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=100,visu=FALSE,inf=.5,sat=10,sat_r=10000,inf_r=1.1,log=F,checkcountact=F,ts=T,ap=F,p_i=1,foldername=F,strategy="all",sl_rad=10,bt=150){
 
     if(is.null(dim(pop))) #if pop is a unique number (ie not preinitialized) 
         pop=generatePopulation(N=pop,xsize=xsize,ysize=ysize,recovery=recovery,speed=speed)
 
+    if(is.character(foldername)) dir.create(foldername)  #create new output folder if needed 
     N=nrow(pop)
 
     infect=sample(N,i0) #choose the first random individuals to be infected
@@ -125,9 +126,9 @@ abmSIR <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysize=
         if(ap)allpop[[t]]=pop
 		if(visu){
             if(ap)
-                visualize(allpop,timeseries,xsize=xsize,ysize=ysize,file=file)
+                visualize(allpop,timeseries,xsize=xsize,ysize=ysize,foldername=foldername)
             else 
-                visualize(pop,timeseries,xsize=xsize,ysize=ysize,file=file)
+                visualize(pop,timeseries,xsize=xsize,ysize=ysize,foldername=foldername)
         }
 	}
     if(ts)output$timeseries=timeseries
