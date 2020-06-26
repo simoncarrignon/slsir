@@ -103,7 +103,7 @@ simuWithRecoverTime <- function(i){
     xsize=ysize=100
     poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
 	poptest[, "behavior"]=B
-    a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=T,ap=F,ts=T)
+    a=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,p_i=.01)
     #neutral=lapply(1:100,function(j){print(j);abmSIR(poptest,1000,p=c(1,1),di=2,i0=1,visu=F,inf=1,sat=20,xsize=xsize,ysize=ysize)}$timeseries[,2])
     #baseline=mean(lapply(neutral,max))
     timeA=mean(sapply(neutral,sapply,getTimeMaxTotal))
@@ -543,4 +543,109 @@ allresults=do.call("rbind",aa)
 allresults=allresults[-which(allresults$max_infect <4),]
 allresults$scores=(1-bscore(allresults$time_max) + bscore(allresults$max_infect))/2
 
+behavioralChanges <- function(){
+    xsize=ysize=100
+    poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
+    pg=.00
+    behave=rep(c(G,B),500*c(pg,1-pg))
+    poptest[, "behavior"]=behave
+    tenSocialLearner=replicate(10,abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,ts=F,log=T,p_i=.01))
+    tenIndividualLearner=replicate(10,abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,log=T,ts=F,p_i=.99))
+    oneSocialLearner=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,ts=F,log=T,p_i=.01)
+    oneIndividualLearner=abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=T,log=T,ts=T,p_i=.99)
 
+    par(mfrow=c(3,2),mar=c(5,5,1,1))
+    concerned=sapply(oneSocialLearner$allpop,getConcerned)
+    plot(1,1,type="n",xlim=c(0,length(concerned)),ylim=range(concerned),xlab="time",ylab="%pop")
+    lines(concerned)
+    sick=sapply(oneSocialLearner$allpop,getSick)
+    plot(1,1,type="n",xlim=c(0,length(sick)),ylim=range(sick),xlab="time",ylab="%pop")
+    lines(sick)
+    concerned=sapply(oneIndividualLearner$allpop,getConcerned)
+    plot(1,1,type="n",xlim=c(0,length(concerned)),ylim=range(concerned),xlab="time",ylab="%pop")
+    lines(concerned)
+    sick=sapply(oneIndividualLearner$allpop,getSick)
+    plot(1,1,type="n",xlim=c(0,length(sick)),ylim=range(sick),xlab="time",ylab="%pop")
+    lines(sick)
+
+    concernByAge=sapply(oneSocialLearner$allpop,getConcernedByAge)
+    plot(1,1,type="n",xlim=c(0,ncol(concernByAge)),ylim=range(concernByAge),xlab="time",ylab="%pop")
+    apply(concernByAge,1,lines)
+
+    for(o in c("oneIndividualLearner","oneSocialLearner")){
+        for(f in c(getConcerned,getSick)){
+            u=get(o)
+            d=sapply(u$allpop,f)
+            plotLines(d)
+        }
+    }
+    for(o in c("tenSocialLearner")){
+        for(f in c(getConcerned,getSick)){
+            u=get(o)
+            d=sapply(u,function(oneSocialLearner)sapply(oneSocialLearner,f))
+            d=apply(d,1,mean)
+            plotLines(d)
+        }
+    }
+
+    concernByAge=sapply(oneIndividualLearner$allpop,getConcernedByAge)
+    plot(1,1,type="n",xlim=c(0,ncol(concernByAge)),ylim=range(concernByAge),xlab="time",ylab="%pop")
+    apply(concernByAge,1,lines)
+
+    concerned=sapply(tenSocialLearner,function(oneSocialLearner)sapply(oneSocialLearner,getConcerned))
+    concerned=apply(concerned,1,mean)
+
+    concernByAge=sapply(oneIndividualLearner$allpop,getConcernedByAge)
+
+    plotLines <- function(data){
+    plot(1,1,type="n",xlim=c(0,length(data)),ylim=range(data),xlab="time",ylab="%pop")
+    lines(data)
+    }
+
+    lapply(1:length(tenSocialLearner),function(u){
+           png(paste0("concernOverTime_",u,".png"),height=1000,width=800,pointsize=14)
+           plotConcernedAndSick(tenSocialLearner[u],tenIndividualLearner[u])
+           dev.off()
+    }
+    )
+
+
+    plotConcernedAndSick <- function(oneSocialLearner,oneIndividualLearner){
+
+
+        par(mfrow=c(3,2),mar=c(1,1,0,1),oma=c(5,5,3,0))
+        for(i in c("Sick","Concerned")){
+            f=get(paste0("get",i))
+            data=sapply(oneSocialLearner$allpop,f)
+            plot(1,1,type="n",xlim=c(0,length(data)),ylim=c(0,1),xlab="time",ylab="%pop",axes=F)
+            lines(data)
+            box()
+            axis(2)
+            mtext(paste("%pop",i),2,3)
+            data=sapply(oneIndividualLearner$allpop,f)
+            plot(1,1,type="n",xlim=c(0,length(data)),ylim=c(0,1),xlab="time",ylab="%pop",axes=F)
+            lines(data)
+            box()
+        }
+
+        agecol=rev(viridis(6,alpha=.8))
+        concernByAge=sapply(oneSocialLearner$allpop,getConcernedByAge)
+        plot(1,1,type="n",xlim=c(0,ncol(concernByAge)),,ylim=c(0,1),xlab="time",ylab="%pop",axes=F)
+        box()
+        axis(2)
+        axis(1)
+        mtext("%pop concerned by age",2,3)
+        mtext("time",1,3)
+        na=lapply(1:6,function(a)lines(concernByAge[a,],col=agecol[a]))
+        concernByAge=sapply(oneIndividualLearner$allpop,getConcernedByAge)
+        plot(1,1,type="n",xlim=c(0,ncol(concernByAge)),ylim=c(0,1),xlab="time",ylab="%pop",axes=F)
+        box()
+        axis(1)
+        legend("topright",legend=c("0-18","18-25","26-34","35-54","55-64","65+"),fill=agecol,title="age category",cex=1)
+        na=lapply(1:6,function(a)lines(concernByAge[a,],col=agecol[a]))
+        mtext("time",1,3)
+        mtext("Social Learners",3,1,outer=T,at=.25)
+        mtext("Individual Learners",3,1,outer=T,at=.75)
+
+    }
+}
