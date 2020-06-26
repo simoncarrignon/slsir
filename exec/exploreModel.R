@@ -394,7 +394,7 @@ printSigmoid  <- function(){
     xsize=ysize=100
     poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,behavior=rep(G,500) )
     old <- Sys.time() 
-    a=abmSIR(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5)
+    a=abmSIR(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file="test",p_i=.5)
     b=abmSIR(poptest,500,p=c(1,.2),di=2,i0=1,inf=.8,sat=10,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,strategy="best")
     plot(a$timeseries[,2])
     lines(b$timeseries[,2])
