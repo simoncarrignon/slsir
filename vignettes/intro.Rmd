@@ -1,17 +1,24 @@
 ---
 title: "Intro to SLSIR package"
 output:
-    html_document:
-        code_folding: show 
-        section_numbers: true
-        toc: true
-        toc_depth: 4
-        toc_float: true
+ html_document: 
+    code_folding: show 
+    section_numbers: true
+    toc: true
+    toc_depth: 4
+    toc_float: true
 ---
 ```{r,include=FALSE}
 library(devtools)
 load_all(".")
+knitr::opts_chunk$set(collapse=TRUE)
+
 ```
+
+<!--
+output:
+    html_document:
+    -->
 
 
 
@@ -23,14 +30,18 @@ The simplest way to run a simulation is to use:
    simpleSimu=slsirSimu(pop=100,tstep=150)
 ```
 
+This use defautl value whcih are detailed in the doc: `?slsirSimu` 
+
 The output of the simulation can be visualised by adding:
 
-```{r simpleVisu,animation.hook="gifski",interval=0.05, aniopts="controls,loop",eval=FALSE}
+```{r simpleVisu,fig.show="animate",interval=0.05, aniopts="controls,loop",eval=TRUE,cache=TRUE,fig.cap="animated output"}
    simpleSimu=slsirSimu(pop=100,tstep=150,visu=T)
 ```
+
 In this visualisation, light blue squares represent agents conforming to social distancing, blue circle represent agents not conforming to social distancingcircle agents 
 
-A more conveniant way to do a simulatoin, used in the paper, is to generate the population using `generatePopulation` as follow:
+
+A more conveniant way to run simulations, used in the paper, is to use `generatePopulation` to pre-generate population:
 ```{r}
     pop=generatePopulation(N=100,xsize=100,ysize=100,speed=1,recovery=1)
 ```
@@ -43,10 +54,44 @@ This will create a table with all information about the population:
 Then the properties of the population can be adjusted 
 
 ```{r}
-    pop[c(10:20),"speed"]=5 #agents 10 to 20 will go five time more quiclkly than all other agents
+    pop[c(10:20),"speed"]=3 #agents 10 to 20 will go twice more quiclkly than all other agents
 ```
 
-```{r}
+```{r 10speed,fig.show="animate",interval=0.05, aniopts="controls loops",eval=TRUE,cache=TRUE,fig.cap="animated output different speed"}
    simpleSimu=slsirSimu(pop=pop,tstep=150,visu=T)
+```
+
+Note: in general all strings are avoided  to accelerate the computation time, and avoid the use of data.frame or table and stick to array. To simplify some global variable are given to translate later in their indice: 
+
+```{r}
+print(sir)
+print(S) 
+print(I)
+print(R)
+print(G)
+print(B)
+```
+
+Now, some simulations using the parameters from the paper:
+
+```{r,cache=TRUE}
+    xsize=ysize=100
+    poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
+	poptest[, "behavior"]=B
+    a=slsirSimu(poptest,450,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,p_i=.01)
+```
+
+The output of a simulation is made of a list of to objet: `allpop` and `timeseries`. All pop filled if the opiton `ap=T` is given to `slsirSimu()` and allows to keep and analysis every agents at every time steps while `timeseries` gives the timeseries for the important factors.
+
+Here a simple way to visualise part of the output generated during this simulation:
+
+```{r testSimu,out.width="50%",fig.show="hold",fig.cap="output of a simulation" }
+plot(1,1,type="n",ylim=c(0,500),xlim=c(0,450),ylab="#agents",xlab="time",main="Evolution of Infection" )
+na=lapply(sir,function(s)lines(a$timeseries[,s],col=sircol[s],lwd=3))
+legend("topright",names(sir),col=sircol,lwd=2)
+
+plot(1,1,type="n",ylim=c(0,500),xlim=c(0,450),ylab="#agents",xlab="time",main="Behavioral changes " )
+na=lapply(1:2,function(s)lines(a$timeseries[,3+s],col=3+s,lwd=3))
+legend("topright",c("Non-Adherent","Adherent"),col=3+(1:2),lwd=2,title = "Adhesion to social distancing")
 ```
 
