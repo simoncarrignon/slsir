@@ -1,3 +1,4 @@
+agecol=brewer.pal(6,"Pastel1")
 
 S<-1
 I<-2
@@ -7,6 +8,8 @@ B<-1
 
 sir<-c(1:3)
 names(sir)<-c("S","I","R")
+sircol=c("blue","red","black")
+names(sircol)=names(sir)
 
 #' ABM SIR 
 #' 
