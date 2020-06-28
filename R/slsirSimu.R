@@ -1,3 +1,4 @@
+require(RColorBrewer)
 agecol=brewer.pal(6,"Pastel1")
 
 S<-1
