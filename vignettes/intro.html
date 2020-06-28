@@ -2890,12 +2890,6 @@ animated output
 animated output different speed
 </p>
 </video>
-<p>Now some simulations using the parameters from the paper:</p>
-<pre class="r"><code>    xsize=ysize=100
-    poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
-    poptest[, &quot;behavior&quot;]=B
-    a=slsirSimu(poptest,450,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,p_i=.01)</code></pre>
-<p>The output of a simulation is made of a list of to objet: <code>allpop</code> and <code>timeseries</code>. All pop filled if the opiton <code>ap=T</code> is given to <code>slsirSimu()</code>, and allows to keeps and analysis every agents at every time steps; will <code>timeseries</code> gives the timeseries for the important factor</p>
 <p>Note: in general all strings are avoided to accelerate the computation time, and avoid the use of data.frame or table and stick to array. To simplify some global variable are given to translate later in their indice:</p>
 <pre class="r"><code>print(sir)
 ## S I R 
@@ -2910,6 +2904,13 @@ print(G)
 ## [1] 2
 print(B)
 ## [1] 1</code></pre>
+<p>Now, some simulations using the parameters from the paper:</p>
+<pre class="r"><code>    xsize=ysize=100
+    poptest=generatePopulation(500,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize) 
+    poptest[, &quot;behavior&quot;]=B
+    a=slsirSimu(poptest,450,p=c(1,.2),di=2,i0=1,inf=.9,sat=5,inf_r=.9,sat_r=5,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,p_i=.01)</code></pre>
+<p>The output of a simulation is made of a list of to objet: <code>allpop</code> and <code>timeseries</code>. All pop filled if the opiton <code>ap=T</code> is given to <code>slsirSimu()</code> and allows to keep and analysis every agents at every time steps while <code>timeseries</code> gives the timeseries for the important factors.</p>
+<p>Here a simple way to visualise part of the output generated during this simulation:</p>
 <pre class="r"><code>plot(1,1,type=&quot;n&quot;,ylim=c(0,500),xlim=c(0,450),ylab=&quot;#agents&quot;,xlab=&quot;time&quot;,main=&quot;Evolution of Infection&quot; )
 na=lapply(sir,function(s)lines(a$timeseries[,s],col=sircol[s],lwd=3))
 legend(&quot;topright&quot;,names(sir),col=sircol,lwd=2)
