@@ -157,27 +157,35 @@ dev.off()
 
 ##############FIGURE 2
 
-    pdf("5e8779c56517890001536101/figures/illuSig.pdf",pointsize=25,  width = 15, height = 7)
+    pdf("illuSigplusFit.pdf",pointsize=25,  width = 15, height = 7)
+fita=1.7191
+fitb=0.6453
     par(mfrow=c(1,2))
     par(mar=c(4,4,1,1))
-    x=seq(0,1,.01)   
-    inp=seq(0,1,.05)   
+    x=seq(0,100,.01)   
+    #inp=seq(0,10,.1)   
+    inp=rev(seq(-1.5,1,length.out=25))
     clrs=colorRampPalette(c("purple4","yellow"))(length(inp))
     #plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),ylab=expression(sig(x,st=10,inp)),main=expression(inp %in%  "(" * list(0,1) * ")") )
-    plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="% infected",ylab=expression(P[switch]),main="" )
-    for(i in 1:length(inp)) lines(x,sig(x,b=inp[i],a=4),ylim=c(0,1),xlim=c(0,1),col=clrs[i],lwd=2) 
-    leg=seq(1,length(inp),length.out=5)
-    legend("bottomright",legend=rev(sapply(inp[leg],function(d)as.expression(bquote(.(d))))),title=expression(nu),col=rev(clrs[leg]),lwd=2,cex=.8,bg="white")
+    plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0.01,100),xlab="#infected per sq miles",ylab=expression(P[switch]),main="",log="x" ,xaxt="n")
+    axis(1,at=c(0.01,0.1,1,10,100),label=c(0.01,0.1,1,10,100)) 
+
+    for(i in 1:length(inp)) lines(x,sig(x,b=10^inp[i],a=2),col=clrs[i],lwd=2) 
+    leg=seq(1,length(inp),length.out=4)
+    lines(x,sig(x,b=fitb,a=fita),col="red",lwd=4) 
+    legend("bottomright",legend=c(rev(sapply(round(inp[leg]),function(d)as.expression(as.expression(bquote(.(10^d)))))),bquote(paste("fit (",nu==.(round(fitb,digit=1)),")"))),title=expression(nu),col=c(rev(clrs[leg]),"red"),lwd=c(rep(2,length(leg)),4),cex=.8,bg="white")
 
     tstp=25
-    stp=rev(seq(-3,3,length.out=tstp))
+    stp=rev(seq(-1.5,1,length.out=tstp))
     clrs=colorRampPalette(c("purple4","yellow"))(tstp)
     #plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),ylab="P(B->G)~sig(x,st,inp=.5)",main=bquote(stp %in% "(" * list(10^.(stp[1]),10^.(stp[tstp])) * ")") )
-    plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="% infected",ylab=expression(P[switch]),main="" )
-    for(i in rev(1:length(stp))) lines(x,sig(x,a=10^stp[i]),ylim=c(0,1),xlim=c(0,1),col=clrs[i],lwd=2) 
-    leg=seq(1,tstp,length.out=5)
+    plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0.01,100),xlab="#infected per sq miles",ylab=expression(P[switch]),main="" ,log="x",xaxt="n")
+    axis(1,at=c(0.01,0.1,1,10,100),label=c(0.01,0.1,1,10,100)) 
+    for(i in rev(1:length(stp))) lines(x,sig(x,a=10^stp[i],b=1),col=clrs[i],lwd=2) 
+    leg=seq(1,tstp,length.out=4)
+    lines(x,sig(x,b=fitb,a=fita),col="red",lwd=4) 
     #legend("bottomright",legend=sapply(round(stp[leg]),function(d)as.expression(bquote(kappa==.(10^d)))),col=clrs[leg],lwd=2)
-    legend("bottomright",legend=sapply(round(stp[leg]),function(d)as.expression(bquote(.(10^d)))),col=clrs[leg],lwd=2,title=expression(kappa),cex=.8,bg="white")
+    legend("bottomright",legend=c(sapply(rev(round(stp[leg])),function(d)as.expression(bquote(.(10^d)))),bquote(paste("fit (",kappa==.(round(fita,digit=1)),")"))),col=c(rev(clrs[leg]),"red"),lwd=c(rep(2,length(leg)),4),title=expression(kappa),cex=.8,bg="white")
     dev.off()
 
 ### Figure3
@@ -196,6 +204,7 @@ plot(subresults$time_max,subresults$max_infect,bg=orderscol,main="",pch=21,xlab=
 legend("topright",legend=c(paste("<",nvl),"all"),pt.bg=color_class,pch=21,col=alpha(1,.5),pt.lwd=.1,title="Rank")
 dev.off()
 
+tstp
 ####
 ##take 500 best simulation
 best=allresults[order(allresults$distances),][1:1000,]
