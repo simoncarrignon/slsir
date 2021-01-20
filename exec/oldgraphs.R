@@ -16,16 +16,16 @@ legend("topright",legend=c("Revert","No revert"),col=c(myred,mygreen),lwd=2)
 dev.off()
 
 
-repetBest=sapply(1:100,function(i){print(i);abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=1,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
-repetBestDos=parSapply(cl,1:100,function(i){print(i);abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
-neutralbad=sapply(1:10,function(i){print(i);abmSIR(poptest,1500,p=c(1,1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
+repetBest=sapply(1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=1,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
+repetBestDos=parSapply(cl,1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
+neutralbad=sapply(1:10,function(i){print(i);slsirSimu(poptest,1500,p=c(1,1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
 library(parallel)
 
 load("best.bin")
 cl <- makeForkCluster(3,outfile="")
-neutralGood=parSapply(cl,1:100,function(i){print(i);abmSIR(poptest,1500,p=c(.1,.1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
-neutralBad=parSapply(cl,1:100,function(i){n=sample(nrow(best),1);print(paste(i,n));abmSIR(poptest,1500,p=c(1,1),di=2,i0=1,inf=best$inf[n],pind=best$pind[n],inf_r=best$inf_r[n],sat_r=best$sat_r[n],sat=best$sat[n],xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
-repetBest=sapply(1:100,function(i){print(i);abmSIR(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=1,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
+neutralGood=parSapply(cl,1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(.1,.1),di=2,i0=1,inf=9,sat=1000,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
+neutralBad=parSapply(cl,1:100,function(i){n=sample(nrow(best),1);print(paste(i,n));slsirSimu(poptest,1500,p=c(1,1),di=2,i0=1,inf=best$inf[n],pind=best$pind[n],inf_r=best$inf_r[n],sat_r=best$sat_r[n],sat=best$sat[n],xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=1,log=F)$timeseries[,2]})
+repetBest=sapply(1:100,function(i){print(i);slsirSimu(poptest,1500,p=c(1,.2),di=2,i0=1,inf=.2,sat=1,xsize=xsize,ysize=ysize,visu=F,ap=F,ts=T,file=F,p_i=.5,log=F)$timeseries[,2]})
 stopCluster(cl)
 
 png("5e8779c56517890001536101/figures/threeDimensionDistance.png",width=1000,height=400,pointsize=20)

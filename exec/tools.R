@@ -182,3 +182,9 @@ marginAndJoin(
               main=""
               )
 dev.off()
+
+
+#### AGE FROM PAPER 
+ages=c("< 24"=.19,
+"25-44"=.45,
+"45+"=.36)

@@ -1,4 +1,10 @@
+_main.html
+_book/
+_bookdown_files/
 *.bin
 *.log
 *.o*
 *.e*
+exec/output/*
+.*.sw*
+
