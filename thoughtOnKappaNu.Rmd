@@ -1,0 +1,607 @@
+---
+title: "a few thought on $\\kappa$ and $\\nu$"
+author: "Simon"
+date: "`r Sys.Date()`"    # can be static "2020-10-25" or "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide    # hide / show, default option for the code display
+    theme: default        # the Bootstrap theme to use for the page
+    number_sections: yes  # whether add number index before section header
+---
+
+```{r,echo=F}
+source("abmEpi.R")
+library(RColorBrewer)
+library(scales)
+library(hdrcde)
+knitr::opts_chunk$set(warning=FALSE,message=FALSE,fig.align="center",cache=TRUE,collapse=TRUE,fig.show="hold")
+```
+
+# Data set and sigmoid fitting
+
+```{r fullds,out.width="50%",fig.cap="ALWAYS (rigth) ALWAYS + FREQ (left)"}
+covid <- read.csv("covid.masks_small.csv")
+#
+bins=10^(seq(-3,2,0.25)) # define some bins
+covid$normalized_tot=covid$cases_jul/covid$pop*covid$density_pop
+covid$normalized_tot[covid$normalized_tot<=0]=0.00001
+allbined=cut(covid$normalized_tot,breaks=bins,include.lowest = T) #cut the dataset in bins
+
+plot(covid$ALWAYS ~ bins[allbined],col=alpha("blue",.2),pch=20,log="x",xlab="Infections per square mile", ylab="Propensity to socially distance")
+boxplot(covid$ALWAYS ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+
+plot(covid$Always_Feq ~ bins[allbined],col=alpha("blue",.2),pch=20,log="x",xlab="Infections per square mile", ylab="Propensity to socially distance")
+boxplot(covid$Always_Feq ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+```
+
+As we can see in both dataset there is always a high percentage of people wearing masks, even if there is no, or really few, infected people, while at the same time, there is no place where more than 90% of the people where mask all the time. Thus fiting a sigmoid that start from 0 to 1 won't work. Thus Alex proposes to rescale the dataset where 50% is the baseline percentage of people wearing mask and 75% the percentage maximum. Those are the graphs on the left of following figure.
+
+```{r,fits,fig.cap="Top: fit using only percentage of people wearing ALWAY their masks, bottom: Always + Freq. Left: 'trimmed' dataset, right: full dataset",out.width="50%"}
+for(dataset in  list(covid$ALWAYS,covid$Always_Feq)){
+	plot(((dataset-0.5)/0.25) ~ bins[allbined],col=alpha("blue",.2),pch=20,log="x",xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5,  ylim=c(0,1),xlim=c(0.01,100))
+	boxplot(((dataset-0.5)/0.25) ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+	fm0 <- nls((dataset-.5)/.25 ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 )) 
+	lines(sort(predict(fm0)) ~sort(covid$normalized_tot),col="green",lwd=5)
+	fitm0=round(fm0$m$getPars(),digits=2)
+	mtext(bquote(y==frac(1,1+e^list(-.(fitm0['kappa']) * (x-.(fitm0['nu']))))),3,1)
+
+	plot(dataset ~ bins[allbined],col=alpha("blue",.2),pch=20,xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5 ,log="x" ,ylim=c(0,1))
+	boxplot(dataset ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+	fm0 <- nls(dataset ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = .001, kappa = 1 )) 
+	lines(sort(predict(fm0)) ~sort(covid$normalized_tot),col="green",lwd=5)
+	fitm0=round(fm0$m$getPars(),digits=2)
+	mtext(bquote(y==frac(1,1+e^list(-.(fitm0['kappa']) * (x-.(fitm0['nu']))))),3,1)
+}
+
+```
+
+```{r,fitbis,fig.cap="different, fit suing different dataset and approximations.",out.width="50%",eval=F,echo=F}
+trimcovid=covid
+trimcovid$normalized_tot[trimcovid$normalized_tot>=.75]=1
+trimcovid$normalized_tot[trimcovid$normalized_tot<=.25]=0.01
+bins=10^(seq(-3,2,0.05)) # define some bins
+biballbined=cut(trimcovid$normalized_tot,breaks=bins,include.lowest = T) #cut the dataset in bins
+for(dataset in  list(trimcovid$ALWAYS,trimcovid$Always_Feq)){
+	plot(((dataset-0.5)/0.25) ~ bins[biballbined],col=alpha("blue",.2),pch=20,log="x",xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5,  ylim=c(0,1),xlim=c(0.01,100))
+	boxplot(((dataset-0.5)/0.25) ~ biballbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+	fm0 <- nls((dataset-.5)/.25 ~ 1/(1+exp(-kappa * (normalized_tot - nu))), trimcovid, start = c(nu = 1, kappa = 1 )) 
+	lines(sort(predict(fm0)) ~sort(trimcovid$normalized_tot),col="green",lwd=5)
+	fitm0=round(fm0$m$getPars(),digits=2)
+	mtext(bquote(y==frac(1,1+e^list(-.(fitm0['kappa']) * (x-.(fitm0['nu']))))),3,1)
+
+	plot(dataset ~ bins[biballbined],col=alpha("blue",.2),pch=20,xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5 ,log="x" ,ylim=c(0,1))
+	boxplot(dataset ~ biballbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+	fm0 <- nls(dataset ~ 1/(1+exp(-kappa * (normalized_tot - nu))), trimcovid, start = c(nu = .001, kappa = 1 )) 
+	lines(sort(predict(fm0)) ~sort(trimcovid$normalized_tot),col="green",lwd=5)
+	fitm0=round(fm0$m$getPars(),digits=2)
+	mtext(bquote(y==frac(1,1+e^list(-.(fitm0['kappa']) * (x-.(fitm0['nu']))))),3,1)
+}
+
+```
+
+# Expected results using fitted values
+
+Then we can convert the parameter fitted in thes function to parameter for the function used in the model by converting the percentage of infected individual in number of infected indvidual per square mile. This will then depend on the number of square miles used to represent the grid. In the exemple below we concider the grid to be of 10 $miles^2$.
+
+Nonteless, if we want to compare those number, even after rescaling them,  it sounds very strange to them directly to the number used in the model _if_ we change the baseline and the 100% value of adherent versus non adherent, as in the simulation, when the sigmoid function is called, 0 means taht 0 individual are wearing mask/adoptive social distancing behaviors; and not that 50% are already wearing masks. This will procue a strange mismatch between what is coded in the model and what we extract from the data. 
+
+The graph below illustrate what happen if we do so, by using these different fit to see what will happen within the model when the parameters $\kappa$ and $\nu$ takes the values found by `nls`. 
+
+
+```{r,fig.cap="Using ALWAYS dataset, red dots represent the fit done with the trimmed dataset, green and yellow the fit with the full dataset"  }
+n=500
+for(dataset in  list(covid$ALWAYS,covid$Always_Feq)){
+
+	plot(dataset ~ bins[allbined],col=alpha("blue",.2),pch=20,xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5 ,log="x" ,ylim=c(0,1))
+	boxplot(dataset ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+
+	fm0=nls((dataset-.5)/.25 ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+	allres=lapply(1:n,function(inf)t(replicate(100,c(inf/10,sum(runif(n)< sig(inf/10,a=fm0["kappa"],b=fm0["nu"]))/n))))
+	allres=do.call("rbind",allres)
+	points(allres[,2]~allres[,1],pch=20,col=alpha("red",.3))
+
+	fm0=nls(dataset ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+	allres=lapply(1:n,function(inf)t(replicate(100,c(inf/10,sum(runif(n)< sig(inf/10,a=fm0["kappa"],b=fm0["nu"]))/n)))) #using the number of infected people per suqared miles so no need to convert the data
+	allres=do.call("rbind",allres)
+	points(allres[,2]~allres[,1],pch=20,col=alpha("yellow",.3))
+
+	allres=lapply(1:n,function(inf)t(replicate(100,c(inf/10,sum(runif(n)< sig(inf/n,a=fm0["kappa"]*50,b=fm0["nu"]/50))/n)))) #using percentage of infected invidual, thus need to convert kappa and nu
+	allres=do.call("rbind",allres)
+	points(allres[,2]~allres[,1],pch=20,col=alpha("green",.3))
+
+}
+```
+
+What happen if instead of having 10 miles$^2$ we have a 100 miles$^2$ (thus one unit= 1 miles)? the grid looks more like the reality, but  then we are missing lot of case on the right and left side of the dataset
+
+```{r,fig.cap="Same than before but considering the model to be 100 miles$^2$"  }
+n=500
+for(dataset in  list(covid$ALWAYS,covid$Always_Feq)){
+
+	plot(dataset ~ bins[allbined],col=alpha("blue",.2),pch=20,xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5 ,log="x" ,ylim=c(0,1))
+	boxplot(dataset ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+
+	fm0=nls((dataset-.5)/.25 ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+	allres=lapply(1:n,function(inf)t(replicate(100,c(inf/100,sum(runif(n)< sig(inf/100,a=fm0["kappa"],b=fm0["nu"]))/n))))
+	allres=do.call("rbind",allres)
+	points(allres[,2]~allres[,1],pch=20,col=alpha("red",.3))
+
+	fm0=nls(dataset ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+	allres=lapply(1:n,function(inf)t(replicate(100,c(inf/100,sum(runif(n)< sig(inf/100,a=fm0["kappa"],b=fm0["nu"]))/n)))) #using the number of infected people per suqared miles so no need to convert the data
+	allres=do.call("rbind",allres)
+	points(allres[,2]~allres[,1],pch=20,col=alpha("yellow",.3))
+
+	allres=lapply(1:n,function(inf)t(replicate(100,c(inf/100,sum(runif(n)< sig(inf/n,a=fm0["kappa"]*5,b=fm0["nu"]/5))/n)))) #using percentage of infected invidual, thus need to convert kappa and nu
+	allres=do.call("rbind",allres)
+	points(allres[,2]~allres[,1],pch=20,col=alpha("green",.3))
+
+}
+```
+
+```{r,fig.cap="Same than before but considering the model to be 100 miles$^2$, using bigger population" ,out.width="50%" }
+for(n in c(500,1000,5000)){
+	for(dataset in  list(covid$ALWAYS,covid$Always_Feq)){
+
+		plot(dataset ~ bins[allbined],col=alpha("blue",.2),pch=20,xlab="Infections per square mile", ylab="Propensity to socially distance",  cex.lab=1.5, cex.axis=1.5 ,log="x" ,ylim=c(0,1),main=paste("simulations with",n,"agent in 100squared m"))
+		boxplot(dataset ~ allbined, at=bins[-length(bins)],ann=F,axes=F,col=alpha("blue",.8),add=T,boxwex=.2,outline=F)
+
+		fm0=nls((dataset-.5)/.25 ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+		allres=lapply(1:n,function(inf)t(replicate(100,c(inf/100,sum(runif(n)< sig(inf/100,a=fm0["kappa"],b=fm0["nu"]))/n))))
+		allres=do.call("rbind",allres)
+		points(allres[,2]~allres[,1],pch=20,col=alpha("red",.3))
+
+		fm0=nls(dataset ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+		allres=lapply(1:n,function(inf)t(replicate(100,c(inf/100,sum(runif(n)< sig(inf/100,a=fm0["kappa"],b=fm0["nu"]))/n)))) #using the number of infected people per suqared miles so no need to convert the data
+		allres=do.call("rbind",allres)
+		points(allres[,2]~allres[,1],pch=20,col=alpha("yellow",.3))
+
+		allres=lapply(1:n,function(inf)t(replicate(100,c(inf/100,sum(runif(n)< sig(inf/n,a=fm0["kappa"]*(n/100),b=fm0["nu"]/(n/100)))/n)))) #using percentage of infected invidual, thus need to convert kappa and nu
+		allres=do.call("rbind",allres)
+		points(allres[,2]~allres[,1],pch=20,col=alpha("green",.3))
+
+	}
+}
+```
+
+# Effect on the marginal joint distributions
+
+We can now rescale, and position the different fits on our distribuitions: 
+
+```{r echo=F}
+marginAndJoin  <- function(
+                           distribA=list(dim1=posterior$worst$inf,dim2=posterior$worst$sat),
+                           distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
+                           expnames=c(distribA="Worst",distribB="Best"),
+                           dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+                           cols,
+                           probas=c(75,90),
+                           log="",
+                           main="",
+						   addpoints=NULL,
+						   ptscol=1,
+                           range=list(dim1=c(0,1),dim2=c(-1,3))
+                           )
+{
+
+    #dimmnames=c(dim1="inf",dim2="sat")
+    names(cols)=c("distribA","distribB")
+
+    xs=list(distribA=distribA$dim1,distribB=distribB$dim1)
+    ys=list(distribA=distribA$dim2,distribB=distribB$dim2)
+
+    ## logarithmique transformation if need (if log != "") 
+    if(length(grep("x",log))>0){
+        xs=lapply(xs,log10)
+    }
+    if(length(grep("y",log))>0)
+        ys=lapply(ys,log10)
+
+    par(oma=c(3,3,0,0))
+
+    layout(matrix(nrow=2,ncol=2,c(1,3,4,2)),widths=c(.7,.3),heights=c(.3,.7))
+
+    par(mar=rep(1,4))
+    plot.new()
+    ds=lapply(xs,function(u)density(u,from=range$dim1[1],to=range$dim1[2]))
+    plot.window(range$dim1,range(sapply(ds,"[[","y")), "", xaxs = "i",asp=NA)
+    for(d in names(ds)){
+        polygon(c(range$dim1[1],ds[[d]]$x,range$dim1[2]),c(0,ds[[d]]$y,0),col=cols[d],lwd=2)
+    }
+    #mtext(lab$dim1,3,1)
+
+    plot.new()
+    ds=lapply(ys,function(u)density(u,from=range$dim2[1],to=range$dim2[2]))
+    plot.window(range(sapply(ds,"[[","y")),range$dim2, "", yaxs = "i",asp=NA)
+    for(d in names(ds)){
+        polygon(c(0,ds[[d]]$y,0),c(range$dim2[1],ds[[d]]$x,range$dim2[2]),col=cols[d],lwd=2)
+    }
+    #mtext(lab$dim2,4,1)
+
+
+    for(s in names(cols)){
+        x=xs[[s]]
+        y=ys[[s]]
+        print(cols[s])
+        hdr.boxplot.2d(x=x,y=y,prob=probas,shadecols=cols[s],xlim=range$dim1,ylim=range$dim2,xlab=dimlab$dim1,ylab=dimlab$dim2,yaxt="n",outside.points=F,yaxt="n",axes=F,frame.plot=F)
+        par(new=T)
+    }
+    box()
+    if(!is.null(addpoints))
+		points(addpoints[,1],addpoints[,2],bg=ptscol,pch=21,cex=2)
+
+    if(length(grep("x",log))>0){
+        xaxp=par()$xaxp
+        axis(1,at=seq(xaxp[1],xaxp[2],length.out=xaxp[3]+1),label=10^seq(xaxp[1],xaxp[2],length.out=xaxp[3]+1))
+    }else{axis(1)}
+    mtext(dimlab$dim2,2,3)
+    mtext(dimlab$dim1,1,3)
+    if(length(grep("y",log))>0){
+        yaxp=par()$yaxp
+        axis(2,at=seq(yaxp[1],yaxp[2],length.out=yaxp[3]+1),label=10^seq(yaxp[1],yaxp[2],length.out=yaxp[3]+1))
+    }else{axis(2)}
+
+    plot.new()
+    par(xpd=NA)
+    legend("center",legend=expnames,fill=cols,bty="n")
+    mtext(main,3,0,out=T)
+    par(xpd=F)
+
+}
+
+color_class=rev(brewer.pal(5,"PuBu"))
+colorbest=color_class[1]
+myred=rgb(r=213,g=94,b=0,maxColorValue=255)
+myred="red"
+mygreen=rgb(r=0,g=158,b=115,maxColorValue=255)
+mygreen=colorbest
+duocolrs=alpha(c(myred,colorbest),.8)
+currange=range=list(dim1=c(0,1),dim2=c(-1,3))
+dimlab=list(dim1=expression(nu),dim2=expression(kappa))
+name="midCurveAllBad"
+#name="midCurveAllBadBestSLS"
+#name="midCurve15Good"
+#name="testradius"
+#name="burnin100BestSLSFixed"
+bdistance <- function(x)(x-min(x))/(max(x)-min(x))
+bscore <- function(x)(x-min(x))/(max(x)-min(x))
+
+aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
+allresults=do.call("rbind",aa)
+#allresults=allresults[allresults$inf <.02 & allresults$sat >10,]
+allresults=allresults[-which(allresults$max_infect <4),]
+allresults$distances=(1-bdistance(allresults$time_max) + bdistance(allresults$max_infect))/2
+allresults$distances2=(1-bdistance(allresults$time_max150) + bdistance(allresults$max_infect150))/2
+allresults$distances3=(1-bdistance(allresults$time_max250) + bdistance(allresults$max_infect250))/2
+
+n=1000
+posterior=list(
+               best=allresults[order(allresults$distances),][1:n,],
+               worst=allresults[order(allresults$distances,decreasing=T),][1:n,],
+               time_max=allresults[order(allresults$time_max,decreasing=T),][1:n,],
+               time_max150=allresults[order(allresults$time_max150,decreasing=T),][1:n,],
+               time_max250=allresults[order(allresults$time_max250,decreasing=T),][1:n,],
+               wtime_max150=allresults[order(allresults$time_max150,decreasing=F),][1:n,],
+               wtime_max250=allresults[order(allresults$time_max250,decreasing=F),][1:n,],
+               max_infect=allresults[order(allresults$max_infect,decreasing=F),][1:n,],
+               max_infect150=allresults[order(allresults$max_infect150,decreasing=F),][1:n,],
+               max_infect250=allresults[order(allresults$max_infect250,decreasing=F),][1:n,],
+               wmax_infect150=allresults[order(allresults$max_infect150,decreasing=T),][1:n,],
+               wmax_infect250=allresults[order(allresults$max_infect250,decreasing=T),][1:n,]
+               )
+```
+
+
+```{r,fig.cap="original results",out.width="25%"}
+
+	fm0trim <- nls((covid$ALWAYS-.5)/.25 ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = 1, kappa = 1 ))$m$getPars()
+	fm0full <- nls(covid$ALWAYS ~ 1/(1+exp(-kappa * (normalized_tot - nu))), covid, start = c(nu = .001, kappa = 1 ))$m$getPars()
+
+fm0trim["nu"]=fm0trim["nu"]
+fm0trim["kappa"]=fm0trim["kappa"]
+fm0full["nu"]=fm0full["nu"]
+fm0full["kappa"]=fm0full["kappa"]
+
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf,dim2=posterior$worst$sat),
+              distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf,dim2=posterior$wmax_infect150$sat),
+              distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+### COmpound marginal with 2d revert learning
+
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf_r,dim2=posterior$worst$sat_r),
+              distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf_r,dim2=posterior$wmax_infect150$sat_r),
+              distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+
+################ best vs prior
+### Cmpound marginal with 2d  learning
+
+expnames=c(distribA="Prior",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf,dim2=allresults$sat),
+              distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+
+expnames=c(distribA="Prior",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf,dim2=allresults$sat),
+              distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+
+### COmpound marginal with 2d revert learning
+expnames=c(distribA="Prior",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf_r,dim2=allresults$sat_r),
+              distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+
+expnames=c(distribA="Prior",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf_r,dim2=allresults$sat_r),
+              distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+```
+
+Using the fact that we know that in our simulation, 100% means 50 infected individual per square metters, we can transform $\nu$ and $\kappa$ to make them fit in ranges explored:
+
+```{r,fig.cap="Rescaled $\\nu$ and $\\kappa$ results",out.width="25%"}
+rangerescale=range=list(dim1=c(-.1,1)/50,dim2=c(0,5))
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf/50,dim2=posterior$worst$sat*50),
+              distribB=list(dim1=posterior$best$inf/50,dim2=posterior$best$sat*50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf/50,dim2=posterior$wmax_infect150$sat*50),
+              distribB=list(dim1=posterior$max_infect150$inf/50,dim2=posterior$max_infect150$sat*50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+### COmpound marginal with 2d revert learning
+
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf_r/50,dim2=posterior$worst$sat_r*50),
+              distribB=list(dim1=posterior$best$inf_r/50,dim2=posterior$best$sat_r*50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf_r/50,dim2=posterior$wmax_infect150$sat_r*50),
+              distribB=list(dim1=posterior$max_infect150$inf_r/50,dim2=posterior$max_infect150$sat_r*50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+################ best vs prior
+### Cmpound marginal with 2d  learning
+
+expnames=c(distribA="Prior",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf/50,dim2=allresults$sat*50),
+              distribB=list(dim1=posterior$best$inf/50,dim2=posterior$best$sat*50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+expnames=c(distribA="Prior",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf/50,dim2=allresults$sat*50),
+              distribB=list(dim1=posterior$max_infect150$inf/50,dim2=posterior$max_infect150$sat*50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+### COmpound marginal with 2d revert learning
+expnames=c(distribA="Prior",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf_r/50,dim2=allresults$sat_r*50),
+              distribB=list(dim1=posterior$best$inf_r/50,dim2=posterior$best$sat_r*50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+expnames=c(distribA="Prior",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf_r/50,dim2=allresults$sat_r*50),
+              distribB=list(dim1=posterior$max_infect150$inf_r/50,dim2=posterior$max_infect150$sat_r*50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+```
+
+The problem is that then, the data our fit found are not represented here. This is where they lies:
+
+```{r,fig.cap="Rescaled $\\nu$ and $\\kappa$ results + fits. yellow dot represent the fit with the whole dataset, green with the trimmed one (using only ALWAYS)",out.width="25%"}
+rangerescale=list(dim1=c(0,1)*50,dim2=c(-3,2))
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf*50,dim2=posterior$worst$sat/50),
+              distribB=list(dim1=posterior$best$inf*50,dim2=posterior$best$sat/50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf*50,dim2=posterior$wmax_infect150$sat/50),
+              distribB=list(dim1=posterior$max_infect150$inf*50,dim2=posterior$max_infect150$sat/50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+### COmpound marginal with 2d revert learning
+
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf_r*50,dim2=posterior$worst$sat_r/50),
+              distribB=list(dim1=posterior$best$inf_r*50,dim2=posterior$best$sat_r/50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf_r*50,dim2=posterior$wmax_infect150$sat_r/50),
+              distribB=list(dim1=posterior$max_infect150$inf_r*50,dim2=posterior$max_infect150$sat_r/50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+################ best vs prior
+### Cmpound marginal with 2d  learning
+
+expnames=c(distribA="Prior",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf*50,dim2=allresults$sat/50),
+              distribB=list(dim1=posterior$best$inf*50,dim2=posterior$best$sat/50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+expnames=c(distribA="Prior",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf*50,dim2=allresults$sat/50),
+              distribB=list(dim1=posterior$max_infect150$inf*50,dim2=posterior$max_infect150$sat/50),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+### COmpound marginal with 2d revert learning
+expnames=c(distribA="Prior",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf_r*50,dim2=allresults$sat_r/50),
+              distribB=list(dim1=posterior$best$inf_r*50,dim2=posterior$best$sat_r/50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+
+
+expnames=c(distribA="Prior",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=allresults$inf_r*50,dim2=allresults$sat_r/50),
+              distribB=list(dim1=posterior$max_infect150$inf_r*50,dim2=posterior$max_infect150$sat_r/50),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=rangerescale,cols=duocolrs,log="y",
+			  addpoints=rbind(c(fm0trim["nu"],log10(fm0trim['kappa'])),
+							  c(fm0full["nu"],log10(fm0full['kappa']))),
+		      ptscol=c("green","yellow"),
+              main=""
+              )
+```
