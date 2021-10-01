@@ -422,8 +422,6 @@ neutralGoodG=parSapply(cl,1:500,function(i){
 save(file="neutralGoodG.bin",neutralGoodG)
 stopCluster(cl)
 
->>>>>>> 4749fe46c3b6bb2ea33162ed569370e5c9f464d1
-
 load("cydia/neutralBad.bin")
 load("cydia/neutralGood.bin")
 load("cydia/neutralGoodG.bin")
