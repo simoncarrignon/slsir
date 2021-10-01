@@ -1,0 +1,97 @@
+# Graph for submitted paper in PLOS ONE 
+
+paper
+
+```{r initialisation}
+library(devtools)
+load_all("..")
+color_class=rev(brewer.pal(5,"PuBu"))
+colorbest=color_class[1]
+myred=rgb(r=213,g=94,b=0,maxColorValue=255)
+myred="red"
+mygreen=rgb(r=0,g=158,b=115,maxColorValue=255)
+mygreen=colorbest
+```
+
+
+### Fig3.tiff
+
+A figure to illustrate different way to flatten the curve
+
+```{r}
+par(mar=c(2,2,2,2))
+plot(1,1,type="n",ylim=c(0,500),xlim=c(1,1500),ylab="",xlab="",xaxt="n",yaxt="n")
+legend("topright",legend=c("No social distancing","Social distancing"),fill=c(myred,mygreen),cex=.95)
+mtext("time",1,1)
+mtext("number of infected people",2,1)
+
+load("../data/neutralBad.bin")
+load("../data/neutralGood.bin")
+load("../data/neutralGoodG.bin")
+#we use precomputed data to compute a mean curve, those data have been generated using the scripts in "exec/graphPaper.R"
+
+meanBad=apply(neutralBad,1,mean)
+meanGood=apply(neutralGoodG,1,mean)
+
+polygon(c(0:1500),meanGood,col=adjustcolor(mygreen,.5),border=NA)
+polygon(c(0:1500),meanBad,col=adjustcolor(myred,.5),border=NA)
+lines(meanGood,col=adjustcolor(mygreen,.9),lwd=2)
+lines(meanBad,col=adjustcolor(myred,.9),lwd=2)
+
+abline(h=max(meanBad),lty=2,col=myred)
+abline(v=which.max(meanBad),lty=2,col=myred)
+abline(h=max(meanGood),lty=2,col=mygreen)
+abline(v=which.max(meanGood),lty=2,col=mygreen)
+
+text(bquote(paste("max infected (",I[max],") no SD")),x=1500,y=max(meanBad)+10,pos=2,cex=.8)
+mtext(bquote(paste("time max (",tau,") no SD")),at=which.max(meanBad),adj=1,cex=.8)
+text(bquote(paste("max infected (",I[max],") SD")),x=1500,y=max(meanGood)+10,pos=2,cex=.8)
+mtext(bquote(paste("time max (",tau,") SD")),at=which.max(meanGood),adj=0,cex=.8)
+
+abline(v=which.max(meanBad),lty=2,col=myred)
+abline(h=max(meanGood),lty=2,col=mygreen)
+abline(v=which.max(meanGood),lty=2,col=mygreen)
+```
+
+## Fig2.tiff
+
+```{r}
+load("../data/repetBest.bin") 
+load("../data/repetWorst.bin") 
+
+### left panel
+par(mar=c(4,4,2,2))
+plot(1,1,type="n",ylim=c(0,500),xlim=c(1,1500),ylab="",xlab="",xaxt="n",yaxt="n")
+abline(v=150,lwd=2,col="gray")
+par(xpd=NA)
+text(150,-20,"t=150",col="1",pos=1)
+par(xpd=F)
+legend("topright",legend=c("No Learning (all NA)","No Learning (all A)","Worst Simulations","Best Simulations"),col=c(myred,mygreen),lty=c(1,1,2,2),lwd=2,cex=.95)
+axis(1)
+axis(2)
+mtext("time",1,3)
+mtext("number of infected people",2,3)
+meanBad=apply(neutralGood,1,mean)
+meanGood=apply(neutralGoodG,1,mean)
+meanWorst=apply(repetWorst,1,mean)
+meanBest=apply(repetBest,1,mean)
+
+lines(meanGood,col=adjustcolor(mygreen,.9),lwd=2)
+lines(meanBad,col=adjustcolor(myred,.9),lwd=2)
+lines(meanBest,col=adjustcolor(mygreen,.9),lwd=2,lty=2)
+lines(meanWorst,col=adjustcolor(myred,.9),lwd=2,lty=2)
+
+### right panel
+subresults=allresults[sample(nrow(allresults),20000),]
+rank=rank(subresults$distances)
+orderscol=rank
+color_class=rev(brewer.pal(5,"PuBu"))
+colorbest=color_class[1]
+orderscol=rep(alpha(color_class[5],.4),length(orderscol))
+nvl=c(1000,2500,5000,10000)
+for(i in (length(nvl):1)) orderscol[rank<=nvl[i]]=alpha(color_class[i],.4)
+#plot(subresults$time_max,subresults$max_infect,bg=orderscol,main=expression(I[max]*" wrt "*tau),pch=21,xlab=expression(tau),ylab=expression(I[max]),lwd=.1)
+plot(subresults$time_max,subresults$max_infect,bg=orderscol,main="",pch=21,xlab=expression(tau),ylab=expression(I[max]),lwd=.1)
+legend("topright",legend=c(paste("<",nvl),"all"),pt.bg=color_class,pch=21,col=alpha(1,.5),pt.lwd=.1,title="Rank")
+```
+
