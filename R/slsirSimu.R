@@ -28,6 +28,7 @@ names(sircol)=names(sir)
 #' @param log TRUE or FALSE, if a simple log (number of time step) should be outputed
 #' @param sat speed of saturation of the sigmoid
 #' @param inf inflexion point of the sigmoid
+#' @param bt burn in period time during whicih there is no social learning
 #' @param ts count and return the number of users during the run
 #' @param ap keep and return the full population for each time step, this can slow the model a lot
 #' @param strategy which social learning will be used (ie which agents will be copied)
