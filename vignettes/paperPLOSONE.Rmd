@@ -1,8 +1,18 @@
-# Graph for submitted paper in PLOS ONE 
+---
+title: "Vignette to reproduce the graph in 'How Social Learning Shapes the Efficacy of Preventative Health Behaviors in an Outbreak' "
+output:
+    html_document:
+        code_folding: show
+        section_numbers: true
+        toc: true
+        toc_depth: 4
+        toc_float: true
+---
 
-paper
 
 ```{r initialisation}
+knitr::opts_chunk$set(echo = TRUE,cache=TRUE,fig.show="hold",out.width="80%")
+
 library(devtools)
 load_all("..")
 color_class=rev(brewer.pal(5,"PuBu"))
@@ -13,11 +23,69 @@ mygreen=rgb(r=0,g=158,b=115,maxColorValue=255)
 mygreen=colorbest
 ```
 
+# Main Paper
 
-### Fig3.tiff
 
-A figure to illustrate different way to flatten the curve
+## Fig3.tiff
 
+A figure to illustrate different way to flatten the curve. We ran several simulationi in two different setup to show the differences between two situation: one when there is no social distancing, one in which there is.
+
+### Static simulations
+The simulations have been run using:
+
+```{r,simulateSimple,eval=F}
+
+library(parallel)
+cl <- makeForkCluster(18,outfile="")
+pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(B,500))
+neutralNSD=parSapply(cl,1:500,function(i){
+                      print(i);
+                         simu=slsirSimu(500,1500,p=c(1,1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                     inf=9,
+                                     sat=1000,
+                                     p_i=1,
+                                     strategy="best",
+                                     ts=T,ap=F,visu=F
+                                     )$timeseries[,2]
+
+})
+save(file="neutralNSD.bin",neutralNSD)
+
+pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(G,500))
+neutralSD=parSapply(cl,1:500,function(i){
+                     print(i);
+                     simu=slsirSimu(500,1500,p=c(.1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                    pop=pop
+                                 inf=9,
+                                 sat=1000,
+                                 p_i=1,
+                                 strategy="best",
+                                 ts=T,ap=F,visu=F
+                                 )$timeseries[,2]
+
+})
+save(file="neutralSD.bin",neutralSD)
+
+
+pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(G,500))
+neutralSD2=parSapply(cl,1:500,function(i){
+                      print(i);
+                         simu=slsirSimu(1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
+                                     pop=pop,
+                                     inf=9,
+                                     sat=1000,
+                                     p_i=1,
+                                     strategy="random",
+                                     ts=T,ap=F,visu=F
+                                     )$timeseries[,2]
+
+})
+save(file="neutralSD2.bin",neutralSD2)
+stopCluster(cl)
+```
+
+
+### plot figure
 ```{r}
 par(mar=c(2,2,2,2))
 plot(1,1,type="n",ylim=c(0,500),xlim=c(1,1500),ylab="",xlab="",xaxt="n",yaxt="n")
@@ -25,40 +93,116 @@ legend("topright",legend=c("No social distancing","Social distancing"),fill=c(my
 mtext("time",1,1)
 mtext("number of infected people",2,1)
 
-load("../data/neutralBad.bin")
-load("../data/neutralGood.bin")
-load("../data/neutralGoodG.bin")
+load("../data/neutralSD.bin")
+load("../data/neutralNSD.bin")
+load("../data/neutralSD2.bin")
 #we use precomputed data to compute a mean curve, those data have been generated using the scripts in "exec/graphPaper.R"
 
-meanBad=apply(neutralBad,1,mean)
-meanGood=apply(neutralGoodG,1,mean)
+meanNSD=apply(neutralNSD,1,mean)
+meanSD=apply(neutralSD2,1,mean)
 
-polygon(c(0:1500),meanGood,col=adjustcolor(mygreen,.5),border=NA)
-polygon(c(0:1500),meanBad,col=adjustcolor(myred,.5),border=NA)
-lines(meanGood,col=adjustcolor(mygreen,.9),lwd=2)
-lines(meanBad,col=adjustcolor(myred,.9),lwd=2)
+polygon(c(0:1500),meanSD,col=adjustcolor(mygreen,.5),border=NA)
+polygon(c(0:1500),meanNSD,col=adjustcolor(myred,.5),border=NA)
+lines(meanSD,col=adjustcolor(mygreen,.9),lwd=2)
+lines(meanNSD,col=adjustcolor(myred,.9),lwd=2)
 
-abline(h=max(meanBad),lty=2,col=myred)
-abline(v=which.max(meanBad),lty=2,col=myred)
-abline(h=max(meanGood),lty=2,col=mygreen)
-abline(v=which.max(meanGood),lty=2,col=mygreen)
+abline(h=max(meanNSD),lty=2,col=myred)
+abline(v=which.max(meanNSD),lty=2,col=myred)
+abline(h=max(meanSD),lty=2,col=mygreen)
+abline(v=which.max(meanSD),lty=2,col=mygreen)
 
-text(bquote(paste("max infected (",I[max],") no SD")),x=1500,y=max(meanBad)+10,pos=2,cex=.8)
-mtext(bquote(paste("time max (",tau,") no SD")),at=which.max(meanBad),adj=1,cex=.8)
-text(bquote(paste("max infected (",I[max],") SD")),x=1500,y=max(meanGood)+10,pos=2,cex=.8)
-mtext(bquote(paste("time max (",tau,") SD")),at=which.max(meanGood),adj=0,cex=.8)
+text(bquote(paste("max infected (",I[max],") no SD")),x=1500,y=max(meanNSD)+10,pos=2,cex=.8)
+mtext(bquote(paste("time max (",tau,") no SD")),at=which.max(meanNSD),adj=1,cex=.8)
+text(bquote(paste("max infected (",I[max],") SD")),x=1500,y=max(meanSD)+10,pos=2,cex=.8)
+mtext(bquote(paste("time max (",tau,") SD")),at=which.max(meanSD),adj=0,cex=.8)
 
-abline(v=which.max(meanBad),lty=2,col=myred)
-abline(h=max(meanGood),lty=2,col=mygreen)
-abline(v=which.max(meanGood),lty=2,col=mygreen)
+abline(v=which.max(meanNSD),lty=2,col=myred)
+abline(h=max(meanSD),lty=2,col=mygreen)
+abline(v=which.max(meanSD),lty=2,col=mygreen)
 ```
 
-## Fig2.tiff
 
-```{r}
+
+
+## Fig4.tiff
+
+In this figure we present the overall results of the main simulations, with some some analysis of $\delta$, the score of each simulation.
+
+### Run all simulations
+
+To runn all simulation one need:
+```{r,runallsimu}
+```
+
+
+
+To get the results of the simulation then just:
+```{r,getallresults}
+name='../data/midCurveAllBadBestSLS/'
+aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
+allresults=do.call("rbind",aa)
+#allresults=allresults[allresults$inf <.02 & allresults$sat >10,]
+allresults=allresults[-which(allresults$max_infect <4),]
+allresults$distances=(1-bdistance(allresults$time_max) + bdistance(allresults$max_infect))/2
+allresults$distances2=(1-bdistance(allresults$time_max150) + bdistance(allresults$max_infect150))/2
+allresults$distances3=(1-bdistance(allresults$time_max250) + bdistance(allresults$max_infect250))/2
+```
+
+For this Figure we also want to compare how simulations with different score relates to the case with no social learning. For that we re-run simulations. These simulations take time so we give the results in `data/`
+
+
+### Re-run best/worst results
+
+```{r,repeatworstebest,eval=F}
+
+library(parallel)
+cl <- makeForkCluster(6,outfile="")
+
+repetBest=parSapply(cl,1:500,function(i){
+                    j=sample(nrow(best),1);print(paste(i,j));
+                    simu=slsirSimu(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                inf=best$inf[j],
+                                sat=best$sat[j],
+                                inf_r=best$inf_r[j],
+                                sat_r=best$sat_r[j],
+                                p_i=best$pind[j],
+                                sl_rad=best$sl_rad[j],
+                                strategy="best",
+                                ts=T,ap=F,visu=F
+                                )$timeseries[,2]
+})
+save(file="repetBest.bin",repetBest)
+
+repetWorst=parSapply(cl,1:500,function(i){
+                    j=sample(nrow(worst),1);print(paste(i,j));
+                    simu=slsirSimu(500,1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                inf=worst$inf[j],
+                                sat=worst$sat[j],
+                                inf_r=worst$inf_r[j],
+                                sat_r=worst$sat_r[j],
+                                p_i=worst$pind[j],
+                                sl_rad=worst$sl_rad[j],
+                                strategy="best",
+                                ts=T,ap=F,visu=F
+                                )$timeseries[,2]
+})
+save(file="repetWorst.bin",repetWorst)
+
+stopCluster(cl)
+```
+
+```{r,getallresultsShort}
 load("../data/repetBest.bin") 
 load("../data/repetWorst.bin") 
+meanWorst=apply(repetWorst,1,mean) #
+meanBest=apply(repetBest,1,mean) #
+```
 
+### generate Figure
+
+We can now plot the graph of the paper
+
+```{r, fig.cap="Fig 4: mean trajectories and scores for simulations", out.width="50%"}
 ### left panel
 par(mar=c(4,4,2,2))
 plot(1,1,type="n",ylim=c(0,500),xlim=c(1,1500),ylab="",xlab="",xaxt="n",yaxt="n")
@@ -71,13 +215,10 @@ axis(1)
 axis(2)
 mtext("time",1,3)
 mtext("number of infected people",2,3)
-meanBad=apply(neutralGood,1,mean)
-meanGood=apply(neutralGoodG,1,mean)
-meanWorst=apply(repetWorst,1,mean)
-meanBest=apply(repetBest,1,mean)
 
-lines(meanGood,col=adjustcolor(mygreen,.9),lwd=2)
-lines(meanBad,col=adjustcolor(myred,.9),lwd=2)
+
+lines(meanSD,col=adjustcolor(mygreen,.9),lwd=2)
+lines(meanNSD,col=adjustcolor(myred,.9),lwd=2)
 lines(meanBest,col=adjustcolor(mygreen,.9),lwd=2,lty=2)
 lines(meanWorst,col=adjustcolor(myred,.9),lwd=2,lty=2)
 
@@ -87,11 +228,97 @@ rank=rank(subresults$distances)
 orderscol=rank
 color_class=rev(brewer.pal(5,"PuBu"))
 colorbest=color_class[1]
-orderscol=rep(alpha(color_class[5],.4),length(orderscol))
+orderscol=rep(adjustcolor(color_class[5],.4),length(orderscol))
 nvl=c(1000,2500,5000,10000)
-for(i in (length(nvl):1)) orderscol[rank<=nvl[i]]=alpha(color_class[i],.4)
+for(i in (length(nvl):1)) orderscol[rank<=nvl[i]]=adjustcolor(color_class[i],.4)
 #plot(subresults$time_max,subresults$max_infect,bg=orderscol,main=expression(I[max]*" wrt "*tau),pch=21,xlab=expression(tau),ylab=expression(I[max]),lwd=.1)
 plot(subresults$time_max,subresults$max_infect,bg=orderscol,main="",pch=21,xlab=expression(tau),ylab=expression(I[max]),lwd=.1)
-legend("topright",legend=c(paste("<",nvl),"all"),pt.bg=color_class,pch=21,col=alpha(1,.5),pt.lwd=.1,title="Rank")
+legend("topright",legend=c(paste("<",nvl),"all"),pt.bg=color_class,pch=21,col=adjustcolor(1,.5),pt.lwd=.1,title="Rank")
 ```
 
+## Fig5
+
+For this figure we need the posterior distribution of our model given by the distance to the data as measured by our $\delta$
+
+###  Get the posterior
+
+```{r}
+best=allresults[order(allresults$distances),][1:1000,]
+best250=allresults[order(allresults$distances),][1:250,]
+best1000=allresults[order(allresults$distances),][1:10000,]
+worst=allresults[order(allresults$distances,decreasing=T),][1:1000,]
+save(file="worst.bin",worst)
+save(file="best.bin",best)
+saveRDS(file="worst.bin",posterior$worst)
+saveRDS(file="best.bin",posterior$best)
+n=1000
+posterior=list(
+               best=allresults[order(allresults$distances),][1:n,],
+               worst=allresults[order(allresults$distances,decreasing=T),][1:n,],
+               time_max=allresults[order(allresults$time_max,decreasing=T),][1:n,],
+               time_max150=allresults[order(allresults$time_max150,decreasing=T),][1:n,],
+               time_max250=allresults[order(allresults$time_max250,decreasing=T),][1:n,],
+               wtime_max150=allresults[order(allresults$time_max150,decreasing=F),][1:n,],
+               wtime_max250=allresults[order(allresults$time_max250,decreasing=F),][1:n,],
+               max_infect=allresults[order(allresults$max_infect,decreasing=F),][1:n,],
+               max_infect150=allresults[order(allresults$max_infect150,decreasing=F),][1:n,],
+               max_infect250=allresults[order(allresults$max_infect250,decreasing=F),][1:n,],
+               wmax_infect150=allresults[order(allresults$max_infect150,decreasing=T),][1:n,],
+               wmax_infect250=allresults[order(allresults$max_infect250,decreasing=T),][1:n,]
+               )
+
+```
+
+
+
+
+```{r,2dHDRplots,oout.width="50%",fig.cap="Top row: distriution of parameter that gives us the best results when simulation reach 150 steps, bottom row: when the simulation reaches 1500. Left column: parameters to swtich from NA to A, right column to switch from NA to A"}"
+library(hdrcde)
+
+duocolrs=adjustcolor(c(myred,colorbest),.8)
+currange=range=list(dim1=c(0,1),dim2=c(-1,3))
+dimlab=list(dim1=expression(nu),dim2=expression(kappa))
+
+### Cmpound marginal with 2d  learning
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf,dim2=posterior$wmax_infect150$sat),
+              distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+expnames=c(distribA="Worst 150",distribB="Best 150")
+marginAndJoin(
+              distribA=list(dim1=posterior$wmax_infect150$inf_r,dim2=posterior$wmax_infect150$sat_r),
+              distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf,dim2=posterior$worst$sat),
+              distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
+              dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+
+expnames=c(distribA="Worst",distribB="Best")
+marginAndJoin(
+              distribA=list(dim1=posterior$worst$inf_r,dim2=posterior$worst$sat_r),
+              distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
+              dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+              expnames=expnames, range=currange,cols=duocolrs,log="y",
+              main=""
+              )
+
+
+```
+
+
+# Supplementary Material
