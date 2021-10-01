@@ -121,7 +121,7 @@ slsirSimu <- function(pop,tstep,p=1,i0=1,di=2,recovery=10,speed=.8,xsize=100,ysi
                 }
             }
 
-            p_ind = p[ind["behavior"]]
+            p_ind = p[ind["behavior"]] #get the probability to transmit the virus given the individual's behavior
 
             ### disease spread
             dist=sqrt(abs(pop[,"x"]-ind["x"])^2+abs(pop[,"y"]-ind["y"])^2) #check the distance of the all other agents
