@@ -8,10 +8,8 @@ output:
         toc_depth: 4
         toc_float: true
 ---
-
-
-```{r initialisation}
-knitr::opts_chunk$set(echo = TRUE,cache=TRUE,fig.show="hold",out.width="80%")
+```{r initialisation,echo=F,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE,cache=TRUE,fig.show="hold",result.show="hide")
 
 library(devtools)
 load_all("..")
@@ -24,6 +22,33 @@ mygreen=colorbest
 ```
 
 # Main Paper
+## Fig2
+A sigmoid function `sig`:
+
+$$ p \sim \frac{1}{1+e^{-\kappa\times(x-\nu)}} $$
+
+```{r, illusig,fig.cap="illustration of switch parameters",out.width="50%"}
+par(mar=c(4,4,1,1))
+x=seq(0,1,.01)
+inp=seq(0,1,.05)
+clrs=colorRampPalette(c("purple4","yellow"))(length(inp))
+plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="% infected",ylab=expression(P[switch]),main="" )
+for(i in 1:length(inp)) lines(x,sig(x,b=inp[i],a=4),ylim=c(0,1),xlim=c(0,1),col=clrs[i],lwd=2)
+leg=seq(1,length(inp),length.out=5)
+legend("bottomright",legend=rev(sapply(inp[leg],function(d)as.expression(bquote(.(d))))),title=expression(nu),col=rev(clrs[leg]),lwd=2,cex=.8,bg="white")
+
+tstp=25
+stp=rev(seq(-3,3,length.out=tstp))
+clrs=colorRampPalette(c("purple4","yellow"))(tstp)
+plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="% infected",ylab=expression(P[switch]),main="" )
+for(i in rev(1:length(stp))) lines(x,sig(x,a=10^stp[i]),ylim=c(0,1),xlim=c(0,1),col=clrs[i],lwd=2)
+leg=seq(1,tstp,length.out=5)
+legend("bottomright",legend=sapply(round(stp[leg]),function(d)as.expression(bquote(.(10^d)))),col=clrs[leg],lwd=2,title=expression(kappa),cex=.8,bg="white")
+
+```
+
+
+
 
 
 ## Fig3.tiff
@@ -36,48 +61,49 @@ The simulations have been run using:
 ```{r,simulateSimple,eval=F}
 
 library(parallel)
-cl <- makeForkCluster(18,outfile="")
+xsize=ysize=100
 pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(B,500))
+cl <- makeForkCluster(18,outfile="")
 neutralNSD=parSapply(cl,1:500,function(i){
-                      print(i);
-                         simu=slsirSimu(500,1500,p=c(1,1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
-                                     inf=9,
-                                     sat=1000,
-                                     p_i=1,
-                                     strategy="best",
-                                     ts=T,ap=F,visu=F
-                                     )$timeseries[,2]
+                     print(i);
+                     simu=slsirSimu(tstep=1500,p=c(1,1),di=2,i0=1,xsize=xsize,ysize=ysize,
+                                    pop=pop,
+                                    inf=9,
+                                    sat=1000,
+                                    p_i=1,
+                                    strategy="best",
+                                    ts=T,ap=F,visu=F
+                                    )$timeseries[,2]
 
 })
 save(file="neutralNSD.bin",neutralNSD)
 
-pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(G,500))
+pop[,"behavior"]=G
 neutralSD=parSapply(cl,1:500,function(i){
-                     print(i);
-                     simu=slsirSimu(500,1500,p=c(.1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
-                                    pop=pop
-                                 inf=9,
-                                 sat=1000,
-                                 p_i=1,
-                                 strategy="best",
-                                 ts=T,ap=F,visu=F
-                                 )$timeseries[,2]
+                    print(i);
+                    simu=slsirSimu(tstep=1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
+                                   pop=pop,
+                                   inf=9,
+                                   sat=1000,
+                                   p_i=1,
+                                   strategy="best",
+                                   ts=T,ap=F,visu=F
+                                   )$timeseries[,2]
 
 })
 save(file="neutralSD.bin",neutralSD)
 
 
-pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(G,500))
 neutralSD2=parSapply(cl,1:500,function(i){
-                      print(i);
-                         simu=slsirSimu(1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
-                                     pop=pop,
-                                     inf=9,
-                                     sat=1000,
-                                     p_i=1,
-                                     strategy="random",
-                                     ts=T,ap=F,visu=F
-                                     )$timeseries[,2]
+                     print(i);
+                     simu=slsirSimu(tstep=1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
+                                    pop=pop,
+                                    inf=9,
+                                    sat=1000,
+                                    p_i=1,
+                                    strategy="random",
+                                    ts=T,ap=F,visu=F
+                                    )$timeseries[,2]
 
 })
 save(file="neutralSD2.bin",neutralSD2)
@@ -99,10 +125,10 @@ load("../data/neutralSD2.bin")
 #we use precomputed data to compute a mean curve, those data have been generated using the scripts in "exec/graphPaper.R"
 
 meanNSD=apply(neutralNSD,1,mean)
-meanSD=apply(neutralSD2,1,mean)
+meanSD=apply(neutralSD,1,mean)
 
-polygon(c(0:1500),meanSD,col=adjustcolor(mygreen,.5),border=NA)
-polygon(c(0:1500),meanNSD,col=adjustcolor(myred,.5),border=NA)
+polygon(0:1500,meanSD,col=adjustcolor(mygreen,.5),border=NA)
+polygon(0:1500,meanNSD,col=adjustcolor(myred,.5),border=NA)
 lines(meanSD,col=adjustcolor(mygreen,.9),lwd=2)
 lines(meanNSD,col=adjustcolor(myred,.9),lwd=2)
 
@@ -130,9 +156,21 @@ In this figure we present the overall results of the main simulations, with some
 
 ### Run all simulations
 
-To runn all simulation one need:
+To runn all simulation one need the script in `exec`
 ```{r,runallsimu}
+
+
+
 ```
+
+Those generate a lot of data, we then amde available the result of our simulation here:
+
+you cann download
+
+```bash
+wget  httpe://adsdas.ads
+```
+
 
 
 
@@ -142,10 +180,8 @@ name='../data/midCurveAllBadBestSLS/'
 aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
 allresults=do.call("rbind",aa)
 #allresults=allresults[allresults$inf <.02 & allresults$sat >10,]
-allresults=allresults[-which(allresults$max_infect <4),]
+allresults=allresults[-which(allresults$max_infect <4),] #we remove the results where no outbreak happend
 allresults$distances=(1-bdistance(allresults$time_max) + bdistance(allresults$max_infect))/2
-allresults$distances2=(1-bdistance(allresults$time_max150) + bdistance(allresults$max_infect150))/2
-allresults$distances3=(1-bdistance(allresults$time_max250) + bdistance(allresults$max_infect250))/2
 ```
 
 For this Figure we also want to compare how simulations with different score relates to the case with no social learning. For that we re-run simulations. These simulations take time so we give the results in `data/`
@@ -156,7 +192,10 @@ For this Figure we also want to compare how simulations with different score rel
 ```{r,repeatworstebest,eval=F}
 
 library(parallel)
-cl <- makeForkCluster(6,outfile="")
+cl <- makeForkCluster(16,outfile="")
+
+best=allresults[order(allresults$distances),][1:1000,]
+worst=allresults[order(allresults$distances,decreasing=T),][1:1000,]
 
 repetBest=parSapply(cl,1:500,function(i){
                     j=sample(nrow(best),1);print(paste(i,j));
@@ -243,14 +282,6 @@ For this figure we need the posterior distribution of our model given by the dis
 ###  Get the posterior
 
 ```{r}
-best=allresults[order(allresults$distances),][1:1000,]
-best250=allresults[order(allresults$distances),][1:250,]
-best1000=allresults[order(allresults$distances),][1:10000,]
-worst=allresults[order(allresults$distances,decreasing=T),][1:1000,]
-save(file="worst.bin",worst)
-save(file="best.bin",best)
-saveRDS(file="worst.bin",posterior$worst)
-saveRDS(file="best.bin",posterior$best)
 n=1000
 posterior=list(
                best=allresults[order(allresults$distances),][1:n,],
@@ -272,7 +303,7 @@ posterior=list(
 
 
 
-```{r,2dHDRplots,oout.width="50%",fig.cap="Top row: distriution of parameter that gives us the best results when simulation reach 150 steps, bottom row: when the simulation reaches 1500. Left column: parameters to swtich from NA to A, right column to switch from NA to A"}"
+```{r,2dHDRplots,out.width="50%",fig.cap="Top row: distriution of parameter that gives us the best results when simulation reach 150 steps, bottom row: when the simulation reaches 1500. Left column: parameters to swtich from NA to A, right column to switch from NA to A",message=F,warning=F}
 library(hdrcde)
 
 duocolrs=adjustcolor(c(myred,colorbest),.8)
@@ -322,3 +353,7 @@ marginAndJoin(
 
 
 # Supplementary Material
+
+
+
+
