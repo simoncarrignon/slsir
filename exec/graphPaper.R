@@ -96,10 +96,6 @@ color.gradient <- function(x, colors=c(myred,"yellow",mygreen), colsteps=100) {
 }
 
 
-bdistance <- function(x)(x-min(x))/(max(x)-min(x))
-bscore <- function(x)(x-min(x))/(max(x)-min(x))
-
-
 
 ##### Grpah papers
 ##get data
@@ -118,9 +114,9 @@ allresults$distances2=(1-bdistance(allresults$time_max150) + bdistance(allresult
 allresults$distances3=(1-bdistance(allresults$time_max250) + bdistance(allresults$max_infect250))/2
 
 #figure 1
-load("cydia/neutralBad.bin")
-load("cydia/neutralGood.bin")
-load("cydia/neutralGoodG.bin")
+load("cydia/neutralSD.bin")
+load("cydia/neutralNSD.bin")
+load("cydia/neutralSD2.bin")
 load("cydia/repetBest.bin")
 load("cydia/repetWorst.bin")
 
@@ -131,8 +127,8 @@ plot(1,1,type="n",ylim=c(0,500),xlim=c(1,1500),ylab="",xlab="",xaxt="n",yaxt="n"
 legend("topright",legend=c("No social distancing","Social distancing"),fill=c(myred,mygreen),cex=.95)
 mtext("time",1,1)
 mtext("number of infected people",2,1)
-meanBad=apply(neutralGood,1,mean)
-meanGood=apply(neutralGoodG,1,mean)
+meanBad=apply(neutralNSD,1,mean)
+meanGood=apply(neutralSD2,1,mean)
 polygon(c(0:1500),meanGood,col=alpha(mygreen,.5),border=NA)
 polygon(c(0:1500),meanBad,col=alpha(myred,.5),border=NA)
 lines(meanGood,col=alpha(mygreen,.9),lwd=2)
@@ -346,7 +342,7 @@ worst=readRDS("worst.bin")
 xsize=ysize=100
 library(parallel)
 cl <- makeForkCluster(6,outfile="")
-neutralGood=parSapply(cl,1:500,function(i){
+neutralNSD=parSapply(cl,1:500,function(i){
                       print(i);
                          simu=slsirSimu(500,1500,p=c(1,1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
                                      inf=9,
@@ -357,9 +353,9 @@ neutralGood=parSapply(cl,1:500,function(i){
                                      )$timeseries[,2]
 
 })
-save(file="neutralGood.bin",neutralGood)
+save(file="neutralNSD.bin",neutralNSD)
 
-neutralBad=parSapply(cl,1:500,function(i){
+neutralSD=parSapply(cl,1:500,function(i){
                      print(i);
                      simu=slsirSimu(500,1500,p=c(.1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
                                  inf=9,
@@ -370,7 +366,7 @@ neutralBad=parSapply(cl,1:500,function(i){
                                  )$timeseries[,2]
 
 })
-save(file="neutralBad.bin",neutralBad)
+save(file="neutralSD.bin",neutralSD)
 
 
 repetBest=parSapply(cl,1:500,function(i){
@@ -406,8 +402,8 @@ save(file="repetWorst.bin",repetWorst)
 
 stopCluster(cl)
 pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=rep(G,500))
-cl <- makeForkCluster(6,outfile="")
-neutralGoodG=parSapply(cl,1:500,function(i){
+cl <- makeForkCluster(15,outfile="")
+neutralSD2=parSapply(cl,1:500,function(i){
                       print(i);
                          simu=slsirSimu(1500,p=c(.1,.1),di=2,i0=1,xsize=xsize,ysize=ysize,
                                      pop=pop,
@@ -419,16 +415,16 @@ neutralGoodG=parSapply(cl,1:500,function(i){
                                      )$timeseries[,2]
 
 })
-save(file="neutralGoodG.bin",neutralGoodG)
+save(file="neutralSD2.bin",neutralSD2)
 stopCluster(cl)
 
-load("cydia/neutralBad.bin")
-load("cydia/neutralGood.bin")
-load("cydia/neutralGoodG.bin")
+load("cydia/neutralSD.bin")
+load("cydia/neutralNSD.bin")
+load("cydia/neutralSD2.bin")
 load("cydia/repetBest.bin")
 load("cydia/repetWorst.bin")
-neutralbadList=lapply(1:nrow(neutralBad),function(i)neutralBad[i,])   
-neutralGoodList=lapply(1:nrow(neutralGood),function(i)neutralGood[i,])   
+neutralbadList=lapply(1:nrow(neutralSD),function(i)neutralSD[i,])   
+neutralNSDList=lapply(1:nrow(neutralNSD),function(i)neutralNSD[i,])   
 repetBestList=lapply(1:nrow(repetBest),function(i)repetBest[i,])   
 repetWorstList=lapply(1:nrow(repetWorst),function(i)repetWorst[i,])   
 
@@ -438,14 +434,14 @@ acs=seq(1,length(subset),length.out=5)
 
 load("cydia/repetBest.bin") 
 load("cydia/repetWorst.bin") 
-load("cydia/neutralBad.bin") 
-load("cydia/neutralGood.bin") 
+load("cydia/neutralSD.bin") 
+load("cydia/neutralNSD.bin") 
 
 
 
 png("5e8779c56517890001536101/figures/fullTrajHDR.png",width=800,height=400,pointsize=17)
 par(mfrow=c(1,2))
-hdr.boxplot(neutralGoodList[subset],pch=".",outline=F,,prob=c(50,95),space=0,ylab="#infected",border=NA,h=10,col=mygreen,ylim=c(0,500),main="No learning")
+hdr.boxplot(neutralNSDList[subset],pch=".",outline=F,,prob=c(50,95),space=0,ylab="#infected",border=NA,h=10,col=mygreen,ylim=c(0,500),main="No learning")
 legend("topright",legend=c("All bad","All good"),fill=c(myred,mygreen))
 par(new=T)
 hdr.boxplot(neutralbadList[subset],pch=".",outline=F,,prob=c(50,95),space=0,ylab="#infected",border=NA,h=10,col=myred,ylim=c(0,500))
@@ -605,8 +601,8 @@ axis(1)
 axis(2)
 mtext("time",1,3)
 mtext("number of infected people",2,3)
-meanBad=apply(neutralGood,1,mean)
-meanGood=apply(neutralGoodG,1,mean)
+meanBad=apply(neutralNSD,1,mean)
+meanGood=apply(neutralSD2,1,mean)
 meanWorst=apply(repetWorst,1,mean)
 meanBest=apply(repetBest,1,mean)
 
