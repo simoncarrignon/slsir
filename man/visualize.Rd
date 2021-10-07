@@ -4,8 +4,15 @@
 \alias{visualize}
 \title{Output}
 \usage{
-visualize(allpop, timeseries, xsize, ysize, foldername = FALSE,
-  width = 1200, height = 900)
+visualize(
+  allpop,
+  timeseries,
+  xsize,
+  ysize,
+  foldername = FALSE,
+  width = 1200,
+  height = 900
+)
 }
 \arguments{
 \item{allpop}{a list of populations for a serie of timesteps}

@@ -55,7 +55,6 @@ marginAndJoin  <- function(
     for(s in names(cols)){
         x=xs[[s]]
         y=ys[[s]]
-        print(cols[s])
         hdr.boxplot.2d(x=x,y=y,prob=probas,shadecols=cols[s],xlim=range$dim1,ylim=range$dim2,xlab=dimlab$dim1,ylab=dimlab$dim2,yaxt="n",outside.points=F,yaxt="n",axes=F,frame.plot=F)
         par(new=T)
     }
