@@ -354,6 +354,7 @@ marginAndJoin(
 
 # Supplementary Material
 
+The code for the supplementary material generate multiples graphs, some have not been added into the paper.
 
 ```{r,eval=F}
 ##### Grpah papers
@@ -452,9 +453,11 @@ for(var in allscores[c(1,4,7)+2]){
 legend("topright",legend=modelsubnames,col=modelcol,lwd=3,lty=1)
 dev.off()
 sapply(allexpe,function(i)quantile(i[[allscores[4]]],prob=.5)) 
+```
 
 
 ##take 1000 best simulation
+```{r,eval=F}
 n=1000
 listallposterior=lapply(allexpe,function(e)
                         {
@@ -477,8 +480,10 @@ listallposterior=lapply(allexpe,function(e)
                                  )
                         }
 )
+```
 
 ### FIGURE 5
+```{r,eval=F}
 for(mname in names(listallposterior)){
     png(paste0("all_switchfunctions_",mname,".png"),pointsize=17, res = 100, width = 7, height = 13, units = "in")
     x=seq(0,1,.01)
@@ -499,9 +504,11 @@ for(mname in names(listallposterior)){
     mtext(mname,3,1,outer=T)
     dev.off()
 }
+```
 
 
 ##FIGURE 7
+```{r,eval=F}
 
 modsubname=sapply(modelnames,function(mod)paste0(strsplit(mod,"")[[1]][-(1:8)],collapse=""))
 png("",pointsize=17, res = 100, width = 7, height = 7, units = "in")
@@ -565,12 +572,14 @@ for(n in names(listallposterior)){
 
 
 
+```
 
 
 
 
 
 #### FIGURE 8
+```{r,eval=F}
 for(n in names(listallposterior)){
     sbest=listallposterior[[n]]
     sbest=sbest[-5]
@@ -780,9 +789,11 @@ plot(1,1,ylim=c(0,500),xlim=c(0,500),type="n",main="#Adherent")
 duocolrs=alpha(c(myred,colorbest),.8)
 currange=range=list(dim1=c(0,1),dim2=c(-1,3))
 dimlab=list(dim1=expression(nu),dim2=expression(kappa))
+```
 
-### Cmpound marginal with 2d  learning
+### Compound marginal with 2d  learning
 
+```{r,eval=F}
 for(i in names(allexpe)){
     posterior=listallposterior[[i]]
     worst=allexpe[[i]]
@@ -891,9 +902,12 @@ for(i in names(allexpe)){
     dev.off()
 }
 
+```
 ##FIGURE 7
+
+```{r,eval=F}
 for(i in names(allexpe)){
-    posterior=listallposterior[[i]]
+	posterior=listallposterior[[i]]
 mar=c(4,3,2,1)
 
 colors=c(P="NA",A=alpha(colorbest,1),B=alpha(colorbest,1))
