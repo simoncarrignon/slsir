@@ -456,7 +456,8 @@ sapply(allexpe,function(i)quantile(i[[allscores[4]]],prob=.5))
 ```
 
 
-##take 1000 best simulation
+##take 1000 best simulations
+
 ```{r,eval=F}
 n=1000
 listallposterior=lapply(allexpe,function(e)
@@ -483,6 +484,7 @@ listallposterior=lapply(allexpe,function(e)
 ```
 
 ### FIGURE 5
+
 ```{r,eval=F}
 for(mname in names(listallposterior)){
     png(paste0("all_switchfunctions_",mname,".png"),pointsize=17, res = 100, width = 7, height = 13, units = "in")
@@ -507,7 +509,8 @@ for(mname in names(listallposterior)){
 ```
 
 
-##FIGURE 7
+### FIGURE 7
+
 ```{r,eval=F}
 
 modsubname=sapply(modelnames,function(mod)paste0(strsplit(mod,"")[[1]][-(1:8)],collapse=""))
@@ -568,18 +571,12 @@ for(n in names(listallposterior)){
         mtext("t0 : 0% NA",2,1,0.7,outer=T) 
         dev.off()
 }
-
-
-
-
 ```
 
+### FIGURE 8
 
-
-
-
-#### FIGURE 8
 ```{r,eval=F}
+
 for(n in names(listallposterior)){
     sbest=listallposterior[[n]]
     sbest=sbest[-5]
@@ -724,6 +721,10 @@ par(xpd=NA)
     dev.off()
 }
 
+```
+
+
+```{r,eval=F}
 
 
 par(mfrow=c(2,4),oma=c(0,4,0,0))
@@ -786,14 +787,16 @@ plot(1,1,ylim=c(0,500),xlim=c(0,500),type="n",main="#Adherent")
      lines(simu$timeseries[,5],col="red")
 }
 
-duocolrs=alpha(c(myred,colorbest),.8)
-currange=range=list(dim1=c(0,1),dim2=c(-1,3))
-dimlab=list(dim1=expression(nu),dim2=expression(kappa))
 ```
 
 ### Compound marginal with 2d  learning
 
 ```{r,eval=F}
+
+duocolrs=alpha(c(myred,colorbest),.8)
+currange=range=list(dim1=c(0,1),dim2=c(-1,3))
+dimlab=list(dim1=expression(nu),dim2=expression(kappa))
+
 for(i in names(allexpe)){
     posterior=listallposterior[[i]]
     worst=allexpe[[i]]
@@ -903,7 +906,8 @@ for(i in names(allexpe)){
 }
 
 ```
-##FIGURE 7
+
+### FIGURE N
 
 ```{r,eval=F}
 for(i in names(allexpe)){
