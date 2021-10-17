@@ -79,3 +79,6 @@ marginAndJoin  <- function(
 
 }
 
+color.gradient <- function(x, colors=c(myred,"yellow",mygreen), colsteps=100) {
+    return( colorRampPalette(colors) (colsteps) [ findInterval(x, seq(min(x),max(x), length.out=colsteps)) ] )
+}
