@@ -1,14 +1,19 @@
 Package: slsir
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: How Social Learning Shapes the Efficacy of Preventative Health Behaviors in an Outbreak
+Version: 0.1.0.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    c(person(given = "Simon",
+           family = "Carrignon",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "simon@nimbios.org",
+           comment = c(ORCID = "0000-0002-4416-1389"))
+    person(given = "Matthew",
+           family = "Silk",
+           role = c("aut"),
+           email = "matthewsilk@outlook.com",
+           comment = c(ORCID = "0000-0002-8318-5383")))
+Description: Provide functions to run simulations about the parallel spread of believes and viruses in a population.
+License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
