@@ -1,7 +1,15 @@
 #a bunch of tools
+library(RColorBrewer)
 
 bdistance <- function(x)(x-min(x))/(max(x)-min(x))
 bscore <- function(x)(x-min(x))/(max(x)-min(x))
+
+color_class=rev(brewer.pal(5,"PuBu"))
+colorbest=color_class[1]
+myred=rgb(r=213,g=94,b=0,maxColorValue=255)
+myred="red"
+mygreen=rgb(r=0,g=158,b=115,maxColorValue=255)
+mygreen=colorbest
 
 
 marginAndJoin  <- function(
@@ -79,6 +87,13 @@ marginAndJoin  <- function(
 
 }
 
+#' 
+#' 
+#' create a gradient of colors givent a vector of value
+#' 
+#' @param x a vector of value to be matched with colors
+#' @param colors a vector of three colors
+#' @param colsteps the number of cilors groups
 color.gradient <- function(x, colors=c(myred,"yellow",mygreen), colsteps=100) {
     return( colorRampPalette(colors) (colsteps) [ findInterval(x, seq(min(x),max(x), length.out=colsteps)) ] )
 }
