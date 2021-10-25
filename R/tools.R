@@ -97,3 +97,70 @@ marginAndJoin  <- function(
 color.gradient <- function(x, colors=c(myred,"yellow",mygreen), colsteps=100) {
     return( colorRampPalette(colors) (colsteps) [ findInterval(x, seq(min(x),max(x), length.out=colsteps)) ] )
 }
+
+#' plot posteriors distribution against priors
+#'@param A : a vector with posterior
+#'@param B : a vector with posterior 
+#'@param prior : a vector with posterior 
+#' @export plot2dens 
+plot2dens <- function(A=NULL,B=NULL,C=NULL,from=NULL,to=NULL,prior=NULL,cols=c(adjustcolor("red",.8),adjustcolor("blue",.8),adjustcolor("yellow",.8)),hdr=F,yaxt=NULL,log=F,...){
+
+    denseP=NULL
+    denseA=NULL
+    denseB=NULL
+    denseC=NULL
+    if(!is.null(prior))prior=prior[!is.na(prior)]
+    if(is.null(yaxt))yaxt="n"
+    if(is.null(from))from=min(A,B,prior)
+    if(is.null(to))to=max(A,B,prior)
+    if(!is.null(A))denseA=density(A,from=from,to=to)
+    if(!is.null(B))denseB=density(B,from=from,to=to)
+    if(!is.null(C))denseC=density(C,from=from,to=to)
+    if(length(prior)==2)denseP=density(runif(100000,prior[1],prior[2]),from=from,to=to)
+    else if(!is.null(prior))denseP=density(prior,from=from,to=to)
+
+    if(is.null(names(cols)))names(cols)=c("P","A","B")
+    rangex=range(denseB$x,denseA$x,denseP$x,denseC$x)
+    rangey=range(0,denseB$y,denseA$y,denseP$y,denseC$y)
+    stepy=max(rangey)*0.2
+    if(hdr)miny=-1*stepy else miny=0
+    plot(denseA,ylim=c(miny,max(rangey)),xlim=rangex,type="n",xaxt="n",yaxt=yaxt,ylab="",...)
+    if(log){
+        xaxp=par()$xaxp
+        axis(1,at=seq(xaxp[1],xaxp[2],length.out=xaxp[3]+1),label=10^seq(xaxp[1],xaxp[2],length.out=xaxp[3]+1))
+    }
+    else axis(1)
+    mtext("Density",2,1)
+    if(!is.null(C))
+        polygon(c(from,denseC$x,to),c(0,denseC$y,0),col=cols["C"],lwd=2)
+    if(!is.null(A)){
+        #polygon(c(from,denseA$x,to),c(0,denseA$y,0),col="white",border=NA,lwd=2)
+        if(hdr){
+            hdstaA=hdr(A,prob=c(75,95),lambda=0.9)
+            hdrA=hdstaA$hdr
+            print(hdrA)
+            polygon(c(hdrA[1,1],hdrA[1,1],hdrA[1,2],hdrA[1,2]),c(-.2*stepy,-.9*stepy,-.9*stepy,-.2*stepy),col=cols["A"],lwd=1)
+
+            polygon(c(hdrA[2,1],hdrA[2,1],hdrA[2,2],hdrA[2,2]),c(-.2*stepy,-.9*stepy,-.9*stepy,-.2*stepy),col=cols["A"],lwd=1)
+            polygon(c(hdrA[2,1],hdrA[2,1],hdrA[2,2],hdrA[2,2]),c(-.2*stepy,-.9*stepy,-.9*stepy,-.2*stepy),col=cols["A"],lwd=1)
+            segments(hdstaA$mode,-.3*stepy,hdstaA$mode,-.8*stepy)
+            middle=(-.2*stepy+-.9*stepy)/2
+            segments(min(A),middle,hdrA[1,1],middle)
+            segments(hdrA[1,2],middle,max(A),middle)
+            polygon(c(from,denseA$x,to),c(0,denseA$y,0),col=cols["A"],lwd=2)
+        }
+        else
+            polygon(c(from,denseA$x,to),c(0,denseA$y,0),col=cols["A"],lwd=2)
+    }
+    if(!is.null(B)){
+        polygon(c(from,denseB$x,to),c(0,denseB$y,0),col=adjustcolor("white",.6),lwd=2,density=NA,border=0)
+        polygon(c(from,denseB$x,to),c(0,denseB$y,0),col=cols["B"],lwd=2,density=5,border=1)
+    }
+    if(!is.null(prior))
+        polygon(c(from,denseP$x,to),c(0,denseP$y,0),col=cols["P"],lwd=2)
+
+    #if(!is.null(A))
+    #        polygon(c(from,denseA$x,to),c(0,denseA$y,0),col=NA,lwd=2)
+
+}
+
