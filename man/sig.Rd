@@ -7,10 +7,12 @@
 sig(x, a = 10, b = 0.5)
 }
 \arguments{
+\item{x}{vector of value}
+
 \item{a}{parameter to define the steepness of the sigmoid slope}
 
 \item{b}{parameter to define when the slope starts}
 }
 \description{
-sigmoid function to individual learning mecanisme
+sigmoid function for individual learning.
 }

@@ -4,8 +4,15 @@
 \alias{generatePopulation}
 \title{Population initiliasation}
 \usage{
-generatePopulation(N, agedistrib = NULL, behavior = NULL,
-  xsize = 100, ysize = 100, recovery = NULL, speed = NULL)
+generatePopulation(
+  N,
+  agedistrib = NULL,
+  behavior = NULL,
+  xsize = 100,
+  ysize = 100,
+  recovery = NULL,
+  speed = NULL
+)
 }
 \arguments{
 \item{N}{number of agents}

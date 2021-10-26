@@ -17,10 +17,11 @@ names(sircol)=names(sir)
 #' Main model
 #' 
 #' @param N the number of agents
-#' @param tstep the duration of the simualtion
-#' @param p the probability for one agent to transmit the disease to another one. This can be a single value, in that case the probability is the same for all agent, or a vector of probabilities, in which case the vector represents the probability of transmission for different behaviors. If the p is a vector a column of bheavior should be present in pop.
+#' @param tstep the duration of the simulation
+#' @param p the probability for one agent to transmit the disease to another one. This can be a single value, in that case the probability is the same for all agent, or a vector of probabilities, in which case the vector represents the probability of transmission for different behaviors. If the p is a vector a column of behavior should be present in pop.
 #' @param p_i the probability for one agent to learn individually. 
 #' @param di the distance between two agents under which the disease can be transmitted
+#' @param sl_rad the distance between two agents under which social learning can occur
 #' @param i0 the number of initial infections
 #' @param speed the speed at which agents move
 #' @param reco time for agent to Recover
@@ -29,6 +30,7 @@ names(sircol)=names(sir)
 #' @param sat speed of saturation of the sigmoid
 #' @param inf inflexion point of the sigmoid
 #' @param ts count and return the number of users during the run
+#' @param bt burning time, a number of timestep during which no learning occurs
 #' @param ap keep and return the full population for each time step, this can slow the model a lot
 #' @param strategy which social learning will be used (ie which agents will be copied)
 #' @param foldername if a string, the output is written in a file (instead of being show in the screen) and the string is used as the name of the folder
@@ -183,9 +185,9 @@ generatePopulation <- function(N,agedistrib=NULL,behavior=NULL,xsize=100,ysize=1
 
 #' Sigmoid
 #' 
-#' sigmoid function to individual learning mecanisme  
+#' sigmoid function for individual learning.
 #' 
-#'@param
+#'@param x vector of value
 #'@param a parameter to define the steepness of the sigmoid slope  
 #'@param b parameter to define when the slope starts
 sig<-function(x,a=10,b=.5)1/(1+exp(-a*(x-b)))
