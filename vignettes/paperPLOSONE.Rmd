@@ -308,7 +308,7 @@ duocolrs=adjustcolor(c(myred,colorbest),.8)
 currange=range=list(dim1=c(0,1),dim2=c(-1,3))
 dimlab=list(dim1=expression(nu),dim2=expression(kappa))
 
-### Cmpound marginal with 2d  learning
+## Cmpound marginal with 2d  learning
 expnames=c(distribA="Worst 150",distribB="Best 150")
 marginAndJoin(
               distribA=list(dim1=posterior$wmax_infect150$inf,dim2=posterior$wmax_infect150$sat),
@@ -398,7 +398,7 @@ rownames(mat_rat)=names(dis)
 ```
 
 
-### Show distances for all models
+## Show distances for all models
 
 ```{r,out.width="45%"}
 
@@ -510,7 +510,7 @@ for(mname in names(listallposterior)){
 ```
 
 
-### FIGURE 7
+## FIGURE 7
 
 ```{r plotAllPosteriorAllParam,eval=T}
 
@@ -580,7 +580,7 @@ for(n in names(listallposterior)){
 }
 ```
 
-### FIGURE 8
+## FIGURE 8
 
 ```{r,eval=F}
 
@@ -780,7 +780,7 @@ plot(1,1,ylim=c(0,500),xlim=c(0,500),type="n",main="#Adherent")
 
 ```
 
-### Compound marginal with 2d  learning
+### 2D compound posteriors
 
 ```{r,eval=T,out.width="50%"}
 
@@ -890,9 +890,9 @@ for(i in names(allexpe)){
 
 ```
 
-### 2D compound posteriors
+## posterior for each param
 
-```{r,eval=T,out.width="25%"}
+```{r,eval=T,out.width="33%"}
 for(i in names(allexpe)){
     posterior=listallposterior[[i]]
     mar=c(4,3,2,1)
@@ -901,6 +901,9 @@ for(i in names(allexpe)){
 
     par(mar=mar)
     plot2dens(prior=1-allresults$pind,A=1-posterior$best$pind,B=1-posterior$max_infect250$pind,cols=colors,from=0,to=1,main="posterior proba social learning",xlab="proba social learning")
+    plot2dens(prior=(allresults$inf_r),A=(posterior$best$inf_r),B=(posterior$max_infect150$inf_r),cols=colors,from=0,to=1,main="posterior revert inflection point",xlab=expression(nu[r]),xaxt="n")
+    legend("topleft",legend=c("prior","final time","150 timesteps"),fill=c(0,colorbest,colorbest),density=c(NA,NA,20))
+    plot2dens(prior=(allresults$inf),A=(posterior$best$inf),B=(posterior$max_infect150$inf),cols=colors,from=0,to=1,main="posterior inflection point",xlab=expression(nu),xaxt="n")
 
     plot2dens(prior=allresults$sl_rad,A=posterior$best$sl_rad,B=posterior$max_infect150$sl_rad,cols=colors,from=1,to=100,main="",xlab="radius social learning")
 
@@ -908,10 +911,8 @@ for(i in names(allexpe)){
 
     plot2dens(prior=log10(allresults$sat),A=log10(posterior$best$sat),B=log10(posterior$max_infect150$sat),cols=colors,from=-1,to=3,xlab=expression(kappa),main="",xaxt="n",log=T)
 
-    plot2dens(prior=(allresults$inf_r),A=(posterior$best$inf_r),B=(posterior$max_infect150$inf_r),cols=colors,from=0,to=1,main="posterior revert inflection point",xlab=expression(nu[r]),xaxt="n")
-    legend("topleft",legend=c("prior","final time","150 timesteps"),fill=c(0,colorbest,colorbest),density=c(NA,NA,20))
     
-    plot2dens(prior=(allresults$inf),A=(posterior$best$inf),B=(posterior$max_infect150$inf),cols=colors,from=0,to=1,main="posterior inflection point",xlab=expression(nu),xaxt="n")
+
 }
 
 ```
