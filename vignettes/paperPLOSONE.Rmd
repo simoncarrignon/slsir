@@ -368,8 +368,26 @@ marginAndJoin(
 
 ```
 
+## FigS2.tiff
 
-The code for the supplementary material generate multiples graphs, some have not been added into the paper.
+```{r,eval=T,fig.cap="Joint posteriors of representative pair of parameters of the model for different level of what we consider as the \\“best\\” simulations. Each distribution represent the parameter distribution of simulations for which the metric δ is ranked below different level, from top to bottom: 10, 000; 5, 000; 2, 500; 1, 000. The 2d areas represent the High Density Regions, ie the smallest regions within which falls a certain percentage of the distribution of the parameters our selected simulation. The lighter areas represent the area within which all the simulations are distributed and darker areas represent regions for smaller HDR",out.width="15%"}
+
+for(d in nvl){
+    best=allresults[rank(allresults$distances)<d,]
+    par(mar=c(4,4,1,1))
+    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab=expression(nu[r]),ylab=expression(kappa[r]))
+    hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab=expression(nu[r]),ylab=expression(kappa))
+    hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(0,1),xlab=expression(nu[r]),ylab="p")
+    hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(-1,3),ylim=c(0,1),xlab=expression(kappa),ylab="p")
+    hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="r",ylab="p")
+    hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="r",ylab=expression(nu))
+}
+```
+
+
+## Figure in S1_text.pdf
+
+In S1_text we explore multiples variants of the model. 
 
 Load data from all model:
 
@@ -443,24 +461,6 @@ listallposterior=lapply(allexpe,function(e)
 )
 ```
 
-## FigS2.tiff
-
-```{r,eval=T,fig.cap="Joint posteriors of representative pair of parameters of the model for different level of what we consider as the \\“best\\” simulations. Each distribution represent the parameter distribution of simulations for which the metric δ is ranked below different level, from top to bottom: 10, 000; 5, 000; 2, 500; 1, 000. The 2d areas represent the High Density Regions, ie the smallest regions within which falls a certain percentage of the distribution of the parameters our selected simulation. The lighter areas represent the area within which all the simulations are distributed and darker areas represent regions for smaller HDR",out.width="15%"}
-
-for(d in nvl){
-    best=allresults[rank(allresults$distances)<d,]
-    par(mar=c(4,4,1,1))
-    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab=expression(nu[r]),ylab=expression(kappa[r]))
-    hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab=expression(nu[r]),ylab=expression(kappa))
-    hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(0,1),xlab=expression(nu[r]),ylab="p")
-    hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(-1,3),ylim=c(0,1),xlab=expression(kappa),ylab="p")
-    hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="r",ylab="p")
-    hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="r",ylab=expression(nu))
-}
-```
-
-
-## Figure in S1_text.pdf
 
 Distribution of the different metrics used to approximate the posteriors for all 4 variantes:
 
@@ -629,6 +629,8 @@ for(i in seq_along(allexpe)){
 ```
 
 ## More supplements
+
+The code for the supplementary material generate multiples graphs, some have not been added into the paper.
 
 
 ```{r allmetricsall,out.width="30%"}
