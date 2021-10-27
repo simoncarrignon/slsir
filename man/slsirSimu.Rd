@@ -32,9 +32,9 @@ slsirSimu(
 )
 }
 \arguments{
-\item{tstep}{the duration of the simualtion}
+\item{tstep}{the duration of the simulation}
 
-\item{p}{the probability for one agent to transmit the disease to another one. This can be a single value, in that case the probability is the same for all agent, or a vector of probabilities, in which case the vector represents the probability of transmission for different behaviors. If the p is a vector a column of bheavior should be present in pop.}
+\item{p}{the probability for one agent to transmit the disease to another one. This can be a single value, in that case the probability is the same for all agent, or a vector of probabilities, in which case the vector represents the probability of transmission for different behaviors. If the p is a vector a column of behavior should be present in pop.}
 
 \item{i0}{the number of initial infections}
 
@@ -60,7 +60,9 @@ slsirSimu(
 
 \item{strategy}{which social learning will be used (ie which agents will be copied)}
 
-\item{bt}{burn in period time during whicih there is no social learning}
+\item{sl_rad}{the distance between two agents under which social learning can occur}
+
+\item{bt}{burning time, a number of timestep during which no learning occurs}
 
 \item{N}{the number of agents}
 
