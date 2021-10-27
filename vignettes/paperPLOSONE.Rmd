@@ -9,7 +9,7 @@ output:
         toc_float: true
 ---
 ```{r initialisation,echo=F,message=FALSE,warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE,cache=TRUE,fig.show="hold",result.show="hide")
+knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE,cache=TRUE,fig.show="hold",result.show="hide",collapse=TRUE)
 
 library(devtools)
 load_all("..")
@@ -173,13 +173,13 @@ you cann download
 
 
 To get the results of the simulation then just:
-```{r,getallresults}
+```{r,getoutputmodel}
 name='../data/midCurveAllBadBestSLS/'
-aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
-allresults=do.call("rbind",aa)
-#allresults=allresults[allresults$inf <.02 & allresults$sat >10,]
-allresults=allresults[-which(allresults$max_infect <4),] #we remove the results where no outbreak happend
-allresults$distances=(1-bdistance(allresults$time_max) + bdistance(allresults$max_infect))/2
+aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="outputmodel.bin",full.names=T)),function(f){load(f);return(outputmodel)})
+outputmodel=do.call("rbind",aa)
+#outputmodel=outputmodel[outputmodel$inf <.02 & outputmodel$sat >10,]
+outputmodel=outputmodel[-which(outputmodel$max_infect <4),] #we remove the results where no outbreak happend
+outputmodel$distances=(1-bdistance(outputmodel$time_max) + bdistance(outputmodel$max_infect))/2
 ```
 
 For this Figure we also want to compare how simulations with different score relates to the case with no social learning. For that we re-run simulations. These simulations take time so we give the results in `data/`
@@ -192,8 +192,8 @@ For this Figure we also want to compare how simulations with different score rel
 library(parallel)
 cl <- makeForkCluster(16,outfile="")
 
-best=allresults[order(allresults$distances),][1:1000,]
-worst=allresults[order(allresults$distances,decreasing=T),][1:1000,]
+best=outputmodel[order(outputmodel$distances),][1:1000,]
+worst=outputmodel[order(outputmodel$distances,decreasing=T),][1:1000,]
 
 repetBest=parSapply(cl,1:500,function(i){
                     j=sample(nrow(best),1);print(paste(i,j));
@@ -228,7 +228,7 @@ save(file="repetWorst.bin",repetWorst)
 stopCluster(cl)
 ```
 
-```{r,getallresultsShort}
+```{r,getoutputmodelShort}
 load("../data/repetBest.bin") 
 load("../data/repetWorst.bin") 
 meanWorst=apply(repetWorst,1,mean) #
@@ -260,7 +260,7 @@ lines(meanBest,col=adjustcolor(mygreen,.9),lwd=2,lty=2)
 lines(meanWorst,col=adjustcolor(myred,.9),lwd=2,lty=2)
 
 ### right panel
-subresults=allresults[sample(nrow(allresults),20000),]
+subresults=outputmodel[sample(nrow(outputmodel),20000),]
 rank=rank(subresults$distances)
 orderscol=rank
 color_class=rev(brewer.pal(5,"PuBu"))
@@ -282,18 +282,18 @@ For this figure we need the posterior distribution of our model given by the dis
 ```{r}
 n=1000
 posterior=list(
-               best=allresults[order(allresults$distances),][1:n,],
-               worst=allresults[order(allresults$distances,decreasing=T),][1:n,],
-               time_max=allresults[order(allresults$time_max,decreasing=T),][1:n,],
-               time_max150=allresults[order(allresults$time_max150,decreasing=T),][1:n,],
-               time_max250=allresults[order(allresults$time_max250,decreasing=T),][1:n,],
-               wtime_max150=allresults[order(allresults$time_max150,decreasing=F),][1:n,],
-               wtime_max250=allresults[order(allresults$time_max250,decreasing=F),][1:n,],
-               max_infect=allresults[order(allresults$max_infect,decreasing=F),][1:n,],
-               max_infect150=allresults[order(allresults$max_infect150,decreasing=F),][1:n,],
-               max_infect250=allresults[order(allresults$max_infect250,decreasing=F),][1:n,],
-               wmax_infect150=allresults[order(allresults$max_infect150,decreasing=T),][1:n,],
-               wmax_infect250=allresults[order(allresults$max_infect250,decreasing=T),][1:n,]
+               best=outputmodel[order(outputmodel$distances),][1:n,],
+               worst=outputmodel[order(outputmodel$distances,decreasing=T),][1:n,],
+               time_max=outputmodel[order(outputmodel$time_max,decreasing=T),][1:n,],
+               time_max150=outputmodel[order(outputmodel$time_max150,decreasing=T),][1:n,],
+               time_max250=outputmodel[order(outputmodel$time_max250,decreasing=T),][1:n,],
+               wtime_max150=outputmodel[order(outputmodel$time_max150,decreasing=F),][1:n,],
+               wtime_max250=outputmodel[order(outputmodel$time_max250,decreasing=F),][1:n,],
+               max_infect=outputmodel[order(outputmodel$max_infect,decreasing=F),][1:n,],
+               max_infect150=outputmodel[order(outputmodel$max_infect150,decreasing=F),][1:n,],
+               max_infect250=outputmodel[order(outputmodel$max_infect250,decreasing=F),][1:n,],
+               wmax_infect150=outputmodel[order(outputmodel$max_infect150,decreasing=T),][1:n,],
+               wmax_infect250=outputmodel[order(outputmodel$max_infect250,decreasing=T),][1:n,]
                )
 
 ```
@@ -301,14 +301,13 @@ posterior=list(
 
 
 
-```{r,2dHDRplots,out.width="50%",fig.cap="Top row: distriution of parameter that gives us the best results when simulation reach 150 steps, bottom row: when the simulation reaches 1500. Left column: parameters to swtich from NA to A, right column to switch from NA to A",message=F,warning=F}
+```{r,2dHDRplots,out.width="50%",fig.cap="Top row: distribution of parameters yielding the best results when the simulation reach 150 steps. Bottom row: best results when the simulation reaches 1500. Left column: parameters to swtich from NA to A, right column to switch from NA to A",message=F,warning=F}
 library(hdrcde)
 
 duocolrs=adjustcolor(c(myred,colorbest),.8)
 currange=range=list(dim1=c(0,1),dim2=c(-1,3))
 dimlab=list(dim1=expression(nu),dim2=expression(kappa))
 
-## Cmpound marginal with 2d  learning
 expnames=c(distribA="Worst 150",distribB="Best 150")
 marginAndJoin(
               distribA=list(dim1=posterior$wmax_infect150$inf,dim2=posterior$wmax_infect150$sat),
@@ -352,13 +351,29 @@ marginAndJoin(
 
 # Supplementary Material
 
+## FigS1.tiff
+```{r,eval=T,out.width="33%",results="asis",fig.show="hold",fig.cap=" All posterior distributions for the 6 parameters used in our simulations. The white area represents the distribution of the parameters of all simulations (the priors), the blue area represents the distribution for the top 1000 simulations rank using δ while the shaded area represent the parameters of the 1000 simulations with the lowest number of infected people after 150 timesteps.Left column represents the parameters value to switch from Non-Adherent to Adherent, middle column from Adherent to Non-Adherent, and right column the paramaters that defines the probability and the radius of social learning. " }
+    posterior=listallposterior[["midCurveAllBadBestSLS"]]
+    colors=c(P="NA",A=adjustcolor(colorbest,1),B=adjustcolor(colorbest,1))
+    plot2dens(prior=(outputmodel$inf),A=(posterior$best$inf),B=(posterior$max_infect150$inf),cols=colors,from=0,to=1,main="posterior inflection point",xlab=expression(nu),xaxt="n")
+    plot2dens(prior=(outputmodel$inf_r),A=(posterior$best$inf_r),B=(posterior$max_infect150$inf_r),cols=colors,from=0,to=1,main="posterior revert inflection point",xlab=expression(nu[r]),xaxt="n")
+    legend("topleft",legend=c("prior","final time","150 timesteps"),fill=c(0,colorbest,colorbest),density=c(NA,NA,20))
+    plot2dens(prior=1-outputmodel$pind,A=1-posterior$best$pind,B=1-posterior$max_infect250$pind,cols=colors,from=0,to=1,main="posterior proba social learning",xlab="proba social learning")
+
+
+    plot2dens(prior=log10(outputmodel$sat),A=log10(posterior$best$sat),B=log10(posterior$max_infect150$sat),cols=colors,from=-1,to=3,xlab=expression(kappa),main="",xaxt="n",log=T)
+    plot2dens(prior=log10(outputmodel$sat_r),A=log10(posterior$best$sat_r),B=log10(posterior$time_max150$sat_r),cols=colors,from=-1,to=3,main="",xlab=expression(kappa[r]),log=T)
+
+    plot2dens(prior=outputmodel$sl_rad,A=posterior$best$sl_rad,B=posterior$max_infect150$sl_rad,cols=colors,from=1,to=100,main="",xlab="radius social learning")
+
+```
+
+
 The code for the supplementary material generate multiples graphs, some have not been added into the paper.
 
 Load data from all model:
 
 ```{r,eval=T}
-##### Grpah papers
-##get data
 library(RColorBrewer)
 modelnames=c("midCurveAllBad","midCurveAllBadBestSLS","midCurve15Good","midCurve15GoodBestSLS","midCurve100GoodBestSLS","burnin100BestSLS")
 names(modelnames)=modelnames
@@ -367,21 +382,18 @@ names(modelcol)=modelnames
 modelsubnames=sapply(modelnames,function(mod)paste0(strsplit(mod,"")[[1]][-(1:8)],collapse=""))
 modelsubnames=LETTERS[1:6]
 
-
-#name="testradius"
 setwd("../data/")
 
 allexpe=lapply(modelnames,function(name){
-               aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
-               allresults=do.call("rbind",aa)
-               if(sum(which(allresults$max_infect <4)>2))allresults=allresults[-which(allresults$max_infect <4),]
-               allresults$distances=(1-bdistance(allresults$time_max) + bdistance(allresults$max_infect))/2
-               allresults$distances2=(1-bdistance(allresults$time_max150) + bdistance(allresults$max_infect150))/2
-               allresults$distances3=(1-bdistance(allresults$time_max250) + bdistance(allresults$max_infect250))/2
-               return(allresults)})
+               aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="outputmodel.bin",full.names=T)),function(f){load(f);return(outputmodel)})
+               outputmodel=do.call("rbind",aa)
+               if(sum(which(outputmodel$max_infect <4)>2))outputmodel=outputmodel[-which(outputmodel$max_infect <4),]
+               outputmodel$distances=(1-bdistance(outputmodel$time_max) + bdistance(outputmodel$max_infect))/2
+               outputmodel$distances2=(1-bdistance(outputmodel$time_max150) + bdistance(outputmodel$max_infect150))/2
+               outputmodel$distances3=(1-bdistance(outputmodel$time_max250) + bdistance(outputmodel$max_infect250))/2
+               return(outputmodel)})
 nsims=sapply(allexpe,nrow)
 
-#Bayes factors
 allscores=c("distances","distances2","distances3","time_max","time_max150","time_max250","max_infect","max_infect150","max_infect250")
 names(allscores)=allscores
 tablesscores=sapply(allscores,function(as){
@@ -391,28 +403,232 @@ tablesscores=sapply(allscores,function(as){
 })
 normalized=apply(tablesscores,2,"/",nsims[rownames(tablesscores)])
 dis=normalized[,1]
+```
+
+We can calculate the Bayes Factors for all models:
+
+```{r}
+
 ##calculate bayes factor, by row, uie mat_rat[i,j] = dis[i]/dis[j]
 mat_rat=sapply(1:length(dis),function(i)sapply(1:length(dis),function(j)dis[i]/dis[j]))  
 colnames(mat_rat)=names(dis)
 rownames(mat_rat)=names(dis)
+knitr::kable(mat_rat)
+```
+
+Then we get the posterior distribution for all models:
+
+
+```{r,eval=T}
+n=1000
+listallposterior=lapply(allexpe,function(e)
+                        {
+                            list(
+                                 best=e[order(e$distances),][1:n,],
+                                 worst=e[order(e$distances,decreasing=T),][1:n,],
+                                 time_max=e[order(e$time_max,decreasing=T),][1:n,],
+                                 time_max150=e[order(e$time_max150,decreasing=T),][1:n,],
+                                 time_max250=e[order(e$time_max250,decreasing=T),][1:n,],
+                                 max_infect=e[order(e$max_infect,decreasing=F),][1:n,],
+                                 max_infect150=e[order(e$max_infect150,decreasing=F),][1:n,],
+                                 max_infect250=e[order(e$max_infect250,decreasing=F),][1:n,],
+                                 wtime_max=e[order(e$time_max,decreasing=F),][1:n,],
+                                 wtime_max150=e[order(e$time_max150,decreasing=F),][1:n,],
+                                 wtime_max250=e[order(e$time_max250,decreasing=F),][1:n,],
+                                 wmax_infect=e[order(e$max_infect,decreasing=T),][1:n,],
+                                 wmax_infect150=e[order(e$max_infect150,decreasing=T),][1:n,],
+                                 wmax_infect250=e[order(e$max_infect250,decreasing=T),][1:n,]
+                                 )
+                        }
+)
+```
+
+## FigS2.tiff
+
+```{r,eval=T,fig.cap="Joint posteriors of representative pair of parameters of the model for different level of what we consider as the \\“best\\” simulations. Each distribution represent the parameter distribution of simulations for which the metric δ is ranked below different level, from top to bottom: 10, 000; 5, 000; 2, 500; 1, 000. The 2d areas represent the High Density Regions, ie the smallest regions within which falls a certain percentage of the distribution of the parameters our selected simulation. The lighter areas represent the area within which all the simulations are distributed and darker areas represent regions for smaller HDR",out.width="15%"}
+
+for(d in nvl){
+    best=outputmodel[rank(outputmodel$distances)<d,]
+    par(mar=c(4,4,1,1))
+    hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab=expression(nu[r]),ylab=expression(kappa[r]))
+    hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(-1,3),xlab=expression(nu[r]),ylab=expression(kappa))
+    hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(0,1),ylim=c(0,1),xlab=expression(nu[r]),ylab="p")
+    hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(-1,3),ylim=c(0,1),xlab=expression(kappa),ylab="p")
+    hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="r",ylab="p")
+    hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=adjustcolor(colorbest,.9),xlim=c(1,100),ylim=c(0,1),xlab="r",ylab=expression(nu))
+}
 ```
 
 
-## Show distances for all models
+## Figure in S1_text.pdf
 
-```{r,out.width="45%"}
+Distribution of the different metrics used to approximate the posteriors for all 4 variantes:
 
-lapply(names(allexpe),function(mname){
-       allresults=allexpe[[mname]]
-       plot(allresults$time_max,allresults$max_infect,col=adjustcolor(color.gradient(allresults$distances,c(mygreen,"yellow", myred)),.2),main=mname,pch=20,xlab="Time Max",ylab="Max Infected")
-       sset=sort(allresults$distances)
-       cols=adjustcolor(color.gradient(sset,c(mygreen,"yellow", myred)),1)
-       lsset=seq(1,length(sset),length.out=4)
-       legend("topright",legend=sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),col=cols[lsset],pch=20)
-})
+```{r,fig.cap="Distribution of the metrics described in the section Results for all simulations for all model (approx 100k simulations per model).",out.width="33%"}
 
+par(oma=c(0,2,0,0),mar=c(4,1,1,0))
+for(v in c(1,4,7)){
+    var=allscores[v]
+        xlimits=range(sapply(allexpe,"[[",var))
+        alld=lapply(allexpe,function(i,var)density(i[[var]]),var=var)
+        ylimits=range(sapply(alld,"[[","y"))
+        t=""
+        if(v==1)t=expression(delta)
+        if(v==4)t=expression(tau)
+        if(v==7)t=expression(I[max])
+        plot(1,1,ylim=ylimits,xlim=xlimits,type="n",main=t,yaxt="n",xlab=t,ylab="density")
+        lapply(names(alld),function(i)lines(alld[[i]],col=modelcol[i],lwd=2))
+
+}
+legend("topleft",legend=modelsubnames,col=modelcol,lwd=3,lty=1)
+mtext("density",2,0,outer=T)
 
 ```
+
+### 2D compound posteriors
+
+```{r,eval=T,out.width="50%",results="asis",fig.show="asis"}
+
+duocolrs=adjustcolor(c(myred,colorbest),.8)
+currange=range=list(dim1=c(0,1),dim2=c(-1,3))
+dimlab=list(dim1=expression(nu),dim2=expression(kappa))
+
+for(i in seq_along(allexpe)){
+
+    cat(paste0("#### Model Variant ",modelsubnames[i],"\n\r"), sep="")
+
+    posterior=listallposterior[[i]]
+    worst=allexpe[[i]]
+
+    expnames=c(distribA="Worst",distribB="Best")
+    marginAndJoin(
+                  distribA=list(dim1=posterior$worst$inf,dim2=posterior$worst$sat),
+                  distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
+                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+
+
+    expnames=c(distribA="Worst 150",distribB="Best 150")
+    marginAndJoin(
+                  distribA=list(dim1=posterior$wmax_infect150$inf,dim2=posterior$wmax_infect150$sat),
+                  distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
+                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+
+
+    ### Compound marginal with 2d revert learning
+
+    expnames=c(distribA="Worst",distribB="Best")
+    marginAndJoin(
+                  distribA=list(dim1=posterior$worst$inf_r,dim2=posterior$worst$sat_r),
+                  distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
+                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+
+
+
+    expnames=c(distribA="Worst 150",distribB="Best 150")
+    marginAndJoin(
+                  distribA=list(dim1=posterior$wmax_infect150$inf_r,dim2=posterior$wmax_infect150$sat_r),
+                  distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
+                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+
+
+    ################ best vs prior
+
+    ### Compound marginal with 2d  learning
+
+    expnames=c(distribA="Prior",distribB="Best")
+    marginAndJoin(
+                  distribA=list(dim1=worst$inf,dim2=worst$sat),
+                  distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
+                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+
+
+    expnames=c(distribA="Prior",distribB="Best 150")
+    marginAndJoin(
+                  distribA=list(dim1=worst$inf,dim2=worst$sat),
+                  distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
+                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+
+
+    ### Compound marginal with 2d revert learning
+
+    expnames=c(distribA="Prior",distribB="Best")
+    marginAndJoin(
+                  distribA=list(dim1=worst$inf_r,dim2=worst$sat_r),
+                  distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
+                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+
+
+    expnames=c(distribA="Prior",distribB="Best 150")
+    marginAndJoin(
+                  distribA=list(dim1=worst$inf_r,dim2=worst$sat_r),
+                  distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
+                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
+                  expnames=expnames, range=currange,cols=duocolrs,log="y",
+                  main=""
+                  )
+    mtext(paste("Model variant",modelsubnames[i]),3,0)
+    cat(paste0("\n\r----\n\r"),sep="")
+}
+
+```
+
+### posterior for each parameter, each models
+
+```{r,eval=T,out.width="33%",results="asis",fig.show="asis"}
+for(i in seq_along(allexpe)){
+    cat(paste0("#### Model Variant ",modelsubnames[i],"\n\r"), sep="")
+    posterior=listallposterior[[i]]
+    mar=c(4,3,2,1)
+
+    colors=c(P="NA",A=adjustcolor(colorbest,1),B=adjustcolor(colorbest,1))
+
+    #par(mar=mar)
+    plot2dens(prior=1-outputmodel$pind,A=1-posterior$best$pind,B=1-posterior$max_infect250$pind,cols=colors,from=0,to=1,main="posterior proba social learning",xlab="proba social learning")
+    plot2dens(prior=(outputmodel$inf_r),A=(posterior$best$inf_r),B=(posterior$max_infect150$inf_r),cols=colors,from=0,to=1,main="posterior revert inflection point",xlab=expression(nu[r]),xaxt="n")
+    legend("topleft",legend=c("prior","final time","150 timesteps"),fill=c(0,colorbest,colorbest),density=c(NA,NA,20))
+    plot2dens(prior=(outputmodel$inf),A=(posterior$best$inf),B=(posterior$max_infect150$inf),cols=colors,from=0,to=1,main="posterior inflection point",xlab=expression(nu),xaxt="n")
+
+    plot2dens(prior=outputmodel$sl_rad,A=posterior$best$sl_rad,B=posterior$max_infect150$sl_rad,cols=colors,from=1,to=100,main="",xlab="radius social learning")
+
+    plot2dens(prior=log10(outputmodel$sat_r),A=log10(posterior$best$sat_r),B=log10(posterior$time_max150$sat_r),cols=colors,from=-1,to=3,main="",xlab=expression(kappa[r]),log=T)
+
+    plot2dens(prior=log10(outputmodel$sat),A=log10(posterior$best$sat),B=log10(posterior$max_infect150$sat),cols=colors,from=-1,to=3,xlab=expression(kappa),main="",xaxt="n",log=T)
+
+    cat(paste0("\n\r----\n\r"),sep="")
+    
+
+}
+
+```
+
+
 
 ```{r allmetricsall,out.width="30%"}
 
@@ -458,31 +674,6 @@ legend("topright",legend=modelsubnames,col=modelcol,lwd=3,lty=1)
 ```
 
 
-## Posterior distribution for all models
-
-```{r,eval=T}
-n=1000
-listallposterior=lapply(allexpe,function(e)
-                        {
-                            list(
-                                 best=e[order(e$distances),][1:n,],
-                                 worst=e[order(e$distances,decreasing=T),][1:n,],
-                                 time_max=e[order(e$time_max,decreasing=T),][1:n,],
-                                 time_max150=e[order(e$time_max150,decreasing=T),][1:n,],
-                                 time_max250=e[order(e$time_max250,decreasing=T),][1:n,],
-                                 max_infect=e[order(e$max_infect,decreasing=F),][1:n,],
-                                 max_infect150=e[order(e$max_infect150,decreasing=F),][1:n,],
-                                 max_infect250=e[order(e$max_infect250,decreasing=F),][1:n,],
-                                 wtime_max=e[order(e$time_max,decreasing=F),][1:n,],
-                                 wtime_max150=e[order(e$time_max150,decreasing=F),][1:n,],
-                                 wtime_max250=e[order(e$time_max250,decreasing=F),][1:n,],
-                                 wmax_infect=e[order(e$max_infect,decreasing=T),][1:n,],
-                                 wmax_infect150=e[order(e$max_infect150,decreasing=T),][1:n,],
-                                 wmax_infect250=e[order(e$max_infect250,decreasing=T),][1:n,]
-                                 )
-                        }
-)
-```
 
 Show the shape of sigmoid for the posteriors distributions
 
@@ -510,7 +701,20 @@ for(mname in names(listallposterior)){
 ```
 
 
-## FIGURE 7
+```{r,out.width="45%"}
+
+lapply(names(allexpe),function(mname){
+       outputmodel=allexpe[[mname]]
+       plot(outputmodel$time_max,outputmodel$max_infect,col=adjustcolor(color.gradient(outputmodel$distances,c(mygreen,"yellow", myred)),.2),main=mname,pch=20,xlab="Time Max",ylab="Max Infected")
+       sset=sort(outputmodel$distances)
+       cols=adjustcolor(color.gradient(sset,c(mygreen,"yellow", myred)),1)
+       lsset=seq(1,length(sset),length.out=4)
+       legend("topright",legend=sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),col=cols[lsset],pch=20)
+})
+
+
+```
+
 
 ```{r plotAllPosteriorAllParam,eval=T}
 
@@ -580,7 +784,6 @@ for(n in names(listallposterior)){
 }
 ```
 
-## FIGURE 8
 
 ```{r,eval=F}
 
@@ -776,143 +979,6 @@ plot(1,1,ylim=c(0,500),xlim=c(0,500),type="n",main="#Adherent")
  for(f in list.files("testingSimHigSL/" ,pattern="allB_*",full.names=T)){ 
      load(f)
      lines(simu$timeseries[,5],col="red")
-}
-
-```
-
-### 2D compound posteriors
-
-```{r,eval=T,out.width="50%"}
-
-duocolrs=adjustcolor(c(myred,colorbest),.8)
-currange=range=list(dim1=c(0,1),dim2=c(-1,3))
-dimlab=list(dim1=expression(nu),dim2=expression(kappa))
-
-for(i in names(allexpe)){
-    posterior=listallposterior[[i]]
-    worst=allexpe[[i]]
-
-    expnames=c(distribA="Worst",distribB="Best")
-    marginAndJoin(
-                  distribA=list(dim1=posterior$worst$inf,dim2=posterior$worst$sat),
-                  distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
-                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-
-
-    expnames=c(distribA="Worst 150",distribB="Best 150")
-    marginAndJoin(
-                  distribA=list(dim1=posterior$wmax_infect150$inf,dim2=posterior$wmax_infect150$sat),
-                  distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
-                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-
-
-    ### COmpound marginal with 2d revert learning
-
-    expnames=c(distribA="Worst",distribB="Best")
-    marginAndJoin(
-                  distribA=list(dim1=posterior$worst$inf_r,dim2=posterior$worst$sat_r),
-                  distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
-                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-
-
-
-    expnames=c(distribA="Worst 150",distribB="Best 150")
-    marginAndJoin(
-                  distribA=list(dim1=posterior$wmax_infect150$inf_r,dim2=posterior$wmax_infect150$sat_r),
-                  distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
-                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-
-
-    ################ best vs prior
-
-    ### Cmpound marginal with 2d  learning
-
-    expnames=c(distribA="Prior",distribB="Best")
-    marginAndJoin(
-                  distribA=list(dim1=worst$inf,dim2=worst$sat),
-                  distribB=list(dim1=posterior$best$inf,dim2=posterior$best$sat),
-                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-
-
-    expnames=c(distribA="Prior",distribB="Best 150")
-    marginAndJoin(
-                  distribA=list(dim1=worst$inf,dim2=worst$sat),
-                  distribB=list(dim1=posterior$max_infect150$inf,dim2=posterior$max_infect150$sat),
-                  dimlab=list(dim1=expression(nu),dim2=expression(kappa)),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-
-
-    ### COmpound marginal with 2d revert learning
-
-    expnames=c(distribA="Prior",distribB="Best")
-    marginAndJoin(
-                  distribA=list(dim1=worst$inf_r,dim2=worst$sat_r),
-                  distribB=list(dim1=posterior$best$inf_r,dim2=posterior$best$sat_r),
-                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-
-
-    expnames=c(distribA="Prior",distribB="Best 150")
-    marginAndJoin(
-                  distribA=list(dim1=worst$inf_r,dim2=worst$sat_r),
-                  distribB=list(dim1=posterior$max_infect150$inf_r,dim2=posterior$max_infect150$sat_r),
-                  dimlab=list(dim1=expression(nu[r]),dim2=expression(kappa[r])),
-                  expnames=expnames, range=currange,cols=duocolrs,log="y",
-                  main=""
-                  )
-    mtext(i,3,0)
-}
-
-```
-
-## posterior for each param
-
-```{r,eval=T,out.width="33%"}
-for(i in names(allexpe)){
-    posterior=listallposterior[[i]]
-    mar=c(4,3,2,1)
-
-    colors=c(P="NA",A=adjustcolor(colorbest,1),B=adjustcolor(colorbest,1))
-
-    par(mar=mar)
-    plot2dens(prior=1-allresults$pind,A=1-posterior$best$pind,B=1-posterior$max_infect250$pind,cols=colors,from=0,to=1,main="posterior proba social learning",xlab="proba social learning")
-    plot2dens(prior=(allresults$inf_r),A=(posterior$best$inf_r),B=(posterior$max_infect150$inf_r),cols=colors,from=0,to=1,main="posterior revert inflection point",xlab=expression(nu[r]),xaxt="n")
-    legend("topleft",legend=c("prior","final time","150 timesteps"),fill=c(0,colorbest,colorbest),density=c(NA,NA,20))
-    plot2dens(prior=(allresults$inf),A=(posterior$best$inf),B=(posterior$max_infect150$inf),cols=colors,from=0,to=1,main="posterior inflection point",xlab=expression(nu),xaxt="n")
-
-    plot2dens(prior=allresults$sl_rad,A=posterior$best$sl_rad,B=posterior$max_infect150$sl_rad,cols=colors,from=1,to=100,main="",xlab="radius social learning")
-
-    plot2dens(prior=log10(allresults$sat_r),A=log10(posterior$best$sat_r),B=log10(posterior$time_max150$sat_r),cols=colors,from=-1,to=3,main="",xlab=expression(kappa[r]),log=T)
-
-    plot2dens(prior=log10(allresults$sat),A=log10(posterior$best$sat),B=log10(posterior$max_infect150$sat),cols=colors,from=-1,to=3,xlab=expression(kappa),main="",xaxt="n",log=T)
-
-    
-
 }
 
 ```
