@@ -158,31 +158,127 @@ In this figure we present the overall results of the main simulations, with some
 
 ### Run all simulations
 
-To run all simulations one need the script in `exec`
-```{r,runallsimu}
+To run all simulations one need to execute the script `exec/parallelRuns.R`.
+```bash
+
+Rscript exec/parallelRuns.R 20 10000 midCurveAllBadBestSLS
+
+```
+
+This will run 10000 simulations on 20 parallel cores, with priors and parameters defined in the script (cf the chunk below for the detail about the cod in the script).
+
+We run this script multiple time on a cluster, until having enough simulation. This represent 
+
+
+
+```{r,eval=F}
+old <- Sys.time() 
+
+args=commandArgs(trailingOnly = TRUE) #pass number of slave by command line, should be #node - 1 as one node is used by the master 
+
+ns=args[1]#first argument is the number of slave
+nsm=args[2]#second argument the number of simulation 
+mainfold=args[3] #third argument = name of the folder where to store the results
+
+if(is.na(mainfold) | mainfold=="") mainfold=Sys.info()['nodename']
+
+fi=0
+fold=paste0(mainfold,fi)
+while(file.exists(fold)){
+    fi=fi+1
+    fold=paste0(mainfold,fi)
+}
+
+print(paste0("Abc will be stored in folder: ",fold))
+dir.create(fold)
+
+
+source("./R/slsirSimu.R")
+library(parallel)
+xsize=ysize=100
+
+nsim=nsm
+
+### Prior definition
+inf=runif(nsim,0,1)
+inf_r=runif(nsim,0,1)
+sat=10^runif(nsim,-1,3)
+sat_r=10^runif(nsim,-1,3)
+pind=runif(nsim)
+sl_rad=sample(100,nsim,replace=T)
+
+allparameter=cbind.data.frame(inf=inf,sat=sat,inf_r=inf_r,sat_r=sat_r,pind=pind,sl_rad=sl_rad)
+
+
+pg=0
+behave=rep(c(G,B),500*c(pg,1-pg))
+
+cl <- makeForkCluster(ns,outfile="")
+allsummary=parSapply(cl,1:nsim,function(j)
+                     {
+                         print(paste("sim #",j,"/",nsim));
+                         pop=generatePopulation(N=500,xsize=xsize,ysize=ysize,recovery=c(8,14)*25,speed=c(1,.2),behavior=behave)
+                         simu=abmSIR(1500,p=c(1,.1),di=2,i0=1,recovery=c(8,14)*25,speed=c(1,.2),xsize=xsize,ysize=ysize,
+                                     pop=pop,
+                                     inf=allparameter$inf[j],
+                                     sat=allparameter$sat[j],
+                                     inf_r=allparameter$inf_r[j],
+                                     sat_r=allparameter$sat_r[j],
+                                     p_i=allparameter$pind[j],
+                                     sl_rad=allparameter$sl_rad[j],
+                                     strategy="best",
+                                     ts=T,ap=F,visu=F,bt=0
+                                     )
+                         #save(file=file.path(fold,paste0("simu_",j,".bin")),simu)
+                         max_infect=max(simu$timeseries[,2])
+                         max_infect150=max(simu$timeseries[1:150,2])
+                         max_infect250=max(simu$timeseries[1:250,2])
+                         c(
+                           max_infect=max_infect,
+                           max_infect150=max_infect150,
+                           max_infect250=max_infect250,
+                           time_max=which.max(simu$timeseries[,2]),
+                           time_max2=which.max(simu$timeseries[,2]>=(max_infect/2)),
+                           time_max4=which.max(simu$timeseries[,2]>=(max_infect/4)),
+                           time_max150=which.max(simu$timeseries[,2]>=(max_infect150)),
+                           time_max250=which.max(simu$timeseries[,2]>=(max_infect250)),
+                           final_size=sum(simu$timeseries[1500,2:3]),
+                           size150=sum(simu$timeseries[150,2:3]),
+                           size250=sum(simu$timeseries[250,2:3])
+                           )
+                     }
+)
+
+
+stopCluster(cl)
+
+allresults=cbind(allparameter,t(allsummary))
+save(file=file.path(fold,"allresults.bin"),allresults)
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
+
 
 
 ```
 
-Those generate a lot of data, we then made available the result of our simulation here:
+To get the results of the simulation that have been run from the script you will need to group all file together, being sure that parameters and results stay do to so you can do:
 
-You can download
-
-
-
-
-
-To get the results of the simulation then just:
-```{r,getallresults}
-name='../data/midCurveAllBadBestSLS/'
+```{r,getallresults,eval=F}
+name='../data/midCurveAllBadBestSLS/' #a folder where all results are stored
 aa=lapply(unlist(lapply(list.dirs(name),list.files,pattern="allresults.bin",full.names=T)),function(f){load(f);return(allresults)})
 allresults=do.call("rbind",aa)
-#allresults=allresults[allresults$inf <.02 & allresults$sat >10,]
-allresults=allresults[-which(allresults$max_infect <4),] #we remove the results where no outbreak happend
+if(length(which(allresults$max_infect <4))>0)
+    allresults=allresults[-which(allresults$max_infect <4),] #we remove the results where no outbreak happend
 allresults$distances=(1-bdistance(allresults$time_max) + bdistance(allresults$max_infect))/2
 ```
 
-For this Figure we also want to compare how simulations with different score relates to the case with no social learning. For that we re-run simulations. These simulations take time so we give the results in `data/`
+The resulting object is available [here](https://osf.io/dbzgr/), if you copy it in the folder `data` one can load it using:
+```{r,eval=T}
+allresults=readRDS("../data/mainmodel.rds")
+```
+
+
+For this Figure we also want to compare how simulations with different score relates to the case with no social learning. For that we re-run simulations with no social learning. These simulations also take time but less  space and are thus available in `data/`
 
 
 ### Re-run best/worst results
@@ -389,16 +485,17 @@ for(d in nvl){
 
 In S1_text we explore multiples variants of the model. 
 
+
 Load data from all model:
 
 ```{r,eval=T}
 library(RColorBrewer)
-modelnames=c("midCurveAllBad","midCurveAllBadBestSLS","midCurve15Good","midCurve15GoodBestSLS","midCurve100GoodBestSLS","burnin100BestSLS")
+modelnames=c("midCurveAllBadBestSLS","midCurve15Good","midCurve15GoodBestSLS","midCurve100GoodBestSLS","midCurveAllBad","burnin100BestSLS","testPA0.2","testPA0.6")
 names(modelnames)=modelnames
 modelcol=brewer.pal(length(modelnames),name="Dark2")
 names(modelcol)=modelnames
 modelsubnames=sapply(modelnames,function(mod)paste0(strsplit(mod,"")[[1]][-(1:8)],collapse=""))
-modelsubnames=LETTERS[1:6]
+modelsubnames=LETTERS[1:8]
 
 setwd("../data/")
 
@@ -412,16 +509,32 @@ allexpe=lapply(modelnames,function(name){
                return(allresults)})
 nsims=sapply(allexpe,nrow)
 
+```
+
+Due to limited computational power, variants has been run an uneven number of time:
+
+```{r,results="asis"}
+for(i in seq_along(modelsubnames)){
+cat(paste("* Variant",modelsubnames[i],":", nsims[i],"simulations\n\r "))
+}
+```
+
+We can compute and compare the score of these different variants:
+
+```{rk}
+
+
 allscores=c("distances","distances2","distances3","time_max","time_max150","time_max250","max_infect","max_infect150","max_infect250")
 names(allscores)=allscores
 tablesscores=sapply(allscores,function(as){
                     allscores=lapply(allexpe,"[[",as)
                     allnames=rep(names(allscores),lengths(allscores))
-                    table(allnames[order(unlist(allscores),decreasing=F)][1:(10000)])
+                    table(factor(allnames[order(unlist(allscores),decreasing=F)][1:(10000)],levels=names(allexpe)))
 })
 normalized=apply(tablesscores,2,"/",nsims[rownames(tablesscores)])
 dis=normalized[,1]
 ```
+
 
 We can calculate the Bayes Factors for all models:
 
@@ -985,3 +1098,4 @@ plot(1,1,ylim=c(0,500),xlim=c(0,500),type="n",main="#Adherent")
 }
 
 ```
+
