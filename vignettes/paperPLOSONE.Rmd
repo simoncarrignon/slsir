@@ -488,7 +488,7 @@ In S1_text we explore multiples variants of the model.
 
 Load data from all model:
 
-```{r,eval=T,cach=F}
+```{r,eval=T,cache=F}
 library(RColorBrewer)
 modelnames=c("midCurveAllBadBestSLS","midCurve15Good","midCurve15GoodBestSLS","midCurve100GoodBestSLS","midCurveAllBad","burnin100BestSLS","testPA0.2","testPA0.6")
 names(modelnames)=modelnames
@@ -496,6 +496,7 @@ modelcol=brewer.pal(length(modelnames),name="Dark2")
 names(modelcol)=modelnames
 modelsubnames=sapply(modelnames,function(mod)paste0(strsplit(mod,"")[[1]][-(1:8)],collapse=""))
 modelsubnames=LETTERS[1:8]
+print("dsasd")
 
 setwd("../data/")
 
@@ -513,15 +514,15 @@ nsims=sapply(allexpe,nrow)
 
 Due to limited computational power, variants has been run an uneven number of time:
 
-```{r,results="asis"}
+```{r,results="asis",cache=F}
 for(i in seq_along(modelsubnames)){
-cat(paste("* Variant",modelsubnames[i],":", nsims[i],"simulations\n\r "))
+    cat(paste("* Variant",modelsubnames[i],":", nsims[i],"simulations\n\r "))
 }
 ```
 
 We can compute and compare the score of these different variants:
 
-```{rk}
+```{r,cache=F}
 
 
 allscores=c("distances","distances2","distances3","time_max","time_max150","time_max250","max_infect","max_infect150","max_infect250")
@@ -538,7 +539,7 @@ dis=normalized[,1]
 
 We can calculate the Bayes Factors for all models:
 
-```{r}
+```{r,cache==T}
 
 ##calculate bayes factor, by row, uie mat_rat[i,j] = dis[i]/dis[j]
 mat_rat=sapply(1:length(dis),function(i)sapply(1:length(dis),function(j)dis[i]/dis[j]))  
