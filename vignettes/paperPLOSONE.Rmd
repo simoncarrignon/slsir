@@ -488,7 +488,7 @@ In S1_text we explore multiples variants of the model.
 
 Load data from all model:
 
-```{r,eval=T}
+```{r,eval=T,cach=F}
 library(RColorBrewer)
 modelnames=c("midCurveAllBadBestSLS","midCurve15Good","midCurve15GoodBestSLS","midCurve100GoodBestSLS","midCurveAllBad","burnin100BestSLS","testPA0.2","testPA0.6")
 names(modelnames)=modelnames
