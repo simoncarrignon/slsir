@@ -41,9 +41,9 @@ rownames(mat_rat)=names(dis)
 par(mfrow=c(2,2))
 lapply(allexpe,function(allresults){
        #png("5e8779c56517890001536101/figures/distribSimulation.png",pointsize=17, res = 100, width = 7, height = 7, units = "in")
-       plot(allresults$time_max,allresults$max_infect,col=alpha(color.gradient(allresults$distances,c(mygreen,"yellow", myred)),.2),main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
+       plot(allresults$time_max,allresults$max_infect,col=adjustcolor(color.gradient(allresults$distances,c(mygreen,"yellow", myred)),.2),main="distance",pch=20,xlab="Time Max",ylab="Max Infected")
        sset=sort(allresults$distances)
-       cols=alpha(color.gradient(sset,c(mygreen,"yellow", myred)),1)
+       cols=adjustcolor(color.gradient(sset,c(mygreen,"yellow", myred)),1)
        lsset=seq(1,length(sset),length.out=4)
        legend("topright",legend=sapply(round(sset[lsset],digit=2),function(d)as.expression(bquote(delta==.(d)))),col=cols[lsset],pch=20)
 })
@@ -134,9 +134,9 @@ for(mname in names(listallposterior)){
         axis(2)
         mtext(modsubname,2.5,2,cex=.9)
         a=axis(1,outer=T)
-        for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf[i],a=best$sat[i]),ylim=c(0,1),xlim=c(0,1),col=alpha(modelcol[mod],.1),lwd=2) 
+        for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf[i],a=best$sat[i]),ylim=c(0,1),xlim=c(0,1),col=adjustcolor(modelcol[mod],.1),lwd=2) 
         plot(x,sig(x),type="n",ylim=c(0,1),xlim=c(0,1),xlab="% same age infected people", ylab="proba. to switch",main="",xaxt="n",yaxt="n")
-        for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf_r[i],a=best$sat_r[i]),ylim=c(0,1),xlim=c(0,1),col=alpha(modelcol[mod],.1),lwd=2) 
+        for(i in 1:nrow(best)) lines(x,sig(x,b=best$inf_r[i],a=best$sat_r[i]),ylim=c(0,1),xlim=c(0,1),col=adjustcolor(modelcol[mod],.1),lwd=2) 
     }
     axis(1,outer=F)
     mtext(mname,3,1,outer=T)
@@ -225,7 +225,7 @@ for(n in names(listallposterior)){
     for(mod in names(sbest)){
         best=sbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=alpha(modelcol[mod],1),xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="revert steepness (log10)")
+        hdr.boxplot.2d(best$inf_r,log10(best$sat_r),prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],1),xlim=c(0,1),ylim=c(-1,3),xlab="revert inf. point",ylab="revert steepness (log10)")
     }
     mtext("inf_r",1,2,outer=T)
     mtext("sat_r",2,2,outer=T)
@@ -244,7 +244,7 @@ for(n in names(listallposterior)){
     for(mod in names(sbest)){
         best=listallposterior$allbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=alpha(modelcol[mod],.9),xlim=c(0,1),ylim=c(-1,3),xlab="inflexion point",ylab="steepness (log10)")
+        hdr.boxplot.2d(best$inf,log10(best$sat),prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],.9),xlim=c(0,1),ylim=c(-1,3),xlab="inflexion point",ylab="steepness (log10)")
     }
     mtext("inf",1,2,outer=T)
     mtext("sat",2,2,outer=T)
@@ -264,7 +264,7 @@ for(n in names(listallposterior)){
     for(mod in names(sbest)){
         best=listallposterior$allbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=alpha(modelcol[mod],.9),xlim=c(0,1),ylim=c(0,1),xlab="inflexion point",ylab="individual learning")
+        hdr.boxplot.2d(best$inf,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],.9),xlim=c(0,1),ylim=c(0,1),xlab="inflexion point",ylab="individual learning")
     }
     mtext("inf",1,2,outer=T)
     mtext("pind",2,2,outer=T)
@@ -284,7 +284,7 @@ for(n in names(listallposterior)){
     for(mod in names(sbest)){
         best=listallposterior$allbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=alpha(modelcol[mod],.9),xlim=c(-1,3),ylim=c(0,1),xlab="steepness (log10)",ylab="individual learning")
+        hdr.boxplot.2d(log10(best$sat),best$pind,prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],.9),xlim=c(-1,3),ylim=c(0,1),xlab="steepness (log10)",ylab="individual learning")
     }
     mtext("sat",1,2,outer=T)
     mtext("pind",2,2,outer=T)
@@ -304,7 +304,7 @@ for(n in names(listallposterior)){
     for(mod in names(sbest)){
         best=listallposterior$allbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=alpha(modelcol[mod],.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="individual learning")
+        hdr.boxplot.2d(best$sl_rad,best$pind,prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="individual learning")
     }
     mtext("sl_rad",1,2,outer=T)
     mtext("pind",2,2,outer=T)
@@ -322,7 +322,7 @@ for(n in names(listallposterior)){
     for(mod in names(sbest)){
         best=listallposterior$allbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=alpha(modelcol[mod],.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="infection points")
+        hdr.boxplot.2d(best$sl_rad,best$inf,prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],.9),xlim=c(1,100),ylim=c(0,1),xlab="radius social learning",ylab="infection points")
     }
     mtext("sl_rad",1,2,outer=T)
     mtext("inf",2,2,outer=T)
@@ -343,7 +343,7 @@ par(xpd=NA)
     for(mod in names(sbest)){
         best=listallposterior$allbest[[mod]]
         if(mod=="burnin100BestSLS")plot.new()
-        hdr.boxplot.2d(best$sl_rad,log10(best$sat),prob=seq(20,100,10),shadecols=alpha(modelcol[mod],.9),xlim=c(1,100),ylim=c(-1,3),xlab="sl_rad",ylab="steepness (log10)")
+        hdr.boxplot.2d(best$sl_rad,log10(best$sat),prob=seq(20,100,10),shadecols=adjustcolor(modelcol[mod],.9),xlim=c(1,100),ylim=c(-1,3),xlab="sl_rad",ylab="steepness (log10)")
     }
     mtext("sl_rad",1,2,outer=T)
     mtext("sat",2,2,outer=T)
@@ -420,7 +420,7 @@ plot(1,1,ylim=c(0,500),xlim=c(0,500),type="n",main="#Adherent")
      lines(simu$timeseries[,5],col="red")
 }
 
-duocolrs=alpha(c(myred,colorbest),.8)
+duocolrs=adjustcolor(c(myred,colorbest),.8)
 currange=range=list(dim1=c(0,1),dim2=c(-1,3))
 dimlab=list(dim1=expression(nu),dim2=expression(kappa))
 
@@ -539,7 +539,7 @@ for(i in names(allexpe)){
     posterior=listallposterior[[i]]
 mar=c(4,3,2,1)
 
-colors=c(P="NA",A=alpha(colorbest,1),B=alpha(colorbest,1))
+colors=c(P="NA",A=adjustcolor(colorbest,1),B=adjustcolor(colorbest,1))
 
 pdf(paste0("5e8779c56517890001536101/figures/posterior_pind_",i,".pdf"),pointsize=30,  width = 10, height = 10)
 par(mar=mar)
