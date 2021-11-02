@@ -448,7 +448,7 @@ marginAndJoin(
 # Supplementary Material
 
 ## FigS1.tiff
-```{r,eval=T,out.width="33%",results="asis",fig.show="hold",fig.cap=" All posterior distributions for the 6 parameters used in our simulations. The white area represents the distribution of the parameters of all simulations (the priors), the blue area represents the distribution for the top 1000 simulations rank using δ while the shaded area represent the parameters of the 1000 simulations with the lowest number of infected people after 150 timesteps.Left column represents the parameters value to switch from Non-Adherent to Adherent, middle column from Adherent to Non-Adherent, and right column the paramaters that defines the probability and the radius of social learning. " }
+```{r,eval=T,out.width="33%",results="asis",fig.show="hold",fig.cap=" All posterior distributions for the 6 parameters used in our simulations. The white area represents the distribution of the parameters of all simulations (the priors), the blue area represents the distribution for the top 1000 ranked simulations using δ while the shaded area represent the parameters of the 1000 simulations with the lowest number of infected people after 150 timesteps. The left column represents the parameters value to switch from Non-Adherent to Adherent, middle column from Adherent to Non-Adherent, and right column the paramaters that defines the probability and the radius of social learning. " }
     posterior=listallposterior[["midCurveAllBadBestSLS"]]
     colors=c(P="NA",A=adjustcolor(colorbest,1),B=adjustcolor(colorbest,1))
     plot2dens(prior=(allresults$inf),A=(posterior$best$inf),B=(posterior$max_infect150$inf),cols=colors,from=0,to=1,main="posterior inflection point",xlab=expression(nu),xaxt="n")
@@ -466,7 +466,7 @@ marginAndJoin(
 
 ## FigS2.tiff
 
-```{r,eval=T,fig.cap="Joint posteriors of representative pair of parameters of the model for different level of what we consider as the \\“best\\” simulations. Each distribution represent the parameter distribution of simulations for which the metric δ is ranked below different level, from top to bottom: 10, 000; 5, 000; 2, 500; 1, 000. The 2d areas represent the High Density Regions, ie the smallest regions within which falls a certain percentage of the distribution of the parameters our selected simulation. The lighter areas represent the area within which all the simulations are distributed and darker areas represent regions for smaller HDR",out.width="15%"}
+```{r,eval=T,fig.cap="Joint posteriors of representative pairs of parameters of the model for different levelss of what we consider as the \\“best\\” simulations. Each distribution represents the parameter distribution of simulations for which the metric δ is ranked below a given level, from top to bottom: 10, 000; 5, 000; 2, 500; 1, 000. The 2d areas represent the High Density Regions, ie the smallest regions within which a certain percentage of the distribution of the parameters from our selected simulation fall. The lighter areas represent the area within which all the simulations are distributed and darker areas represent regions for successively smaller HDRs",out.width="15%"}
 
 for(d in nvl){
     best=allresults[rank(allresults$distances)<d,]
@@ -481,16 +481,16 @@ for(d in nvl){
 ```
 
 
-## Figure in S1_text.pdf
+## Figures in S1_text.pdf
 
 In S1_text we explore multiples variants of the model. 
 
 
-Load data from all model:
+Load data from all models:
 
 ```{r,eval=T,cache=F}
 library(RColorBrewer)
-modelnames=c("midCurveAllBadBestSLS","midCurve15Good","midCurve15GoodBestSLS","midCurve100GoodBestSLS","midCurveAllBad","burnin100BestSLS","testPA0.2","testPA0.6")
+modelnames=c("midCurveAllBadBestSLS","midCurve15GoodBestSLS","midCurve100GoodBestSLS","midCurveAllBad","midCurve15Good","burnin100BestSLS","testPA0.2","testPA0.6")
 names(modelnames)=modelnames
 modelcol=brewer.pal(length(modelnames),name="Dark2")
 names(modelcol)=modelnames
@@ -511,7 +511,7 @@ nsims=sapply(allexpe,nrow)
 
 ```
 
-Due to limited computational power, variants has been run an uneven number of time:
+Due to limited computational power, variants has been run an uneven number of times:
 
 ```{r,results="asis",cache=F}
 for(i in seq_along(modelsubnames)){
@@ -538,7 +538,7 @@ dis=normalized[,1]
 
 We can calculate the Bayes Factors for all models:
 
-```{r,cache==T}
+```{r,cache=F}
 
 ##calculate bayes factor, by row, uie mat_rat[i,j] = dis[i]/dis[j]
 mat_rat=sapply(1:length(dis),function(i)sapply(1:length(dis),function(j)dis[i]/dis[j]))  
@@ -550,7 +550,7 @@ knitr::kable(mat_rat)
 Then we get the posterior distribution for all models:
 
 
-```{r,eval=T}
+```{r,eval=T,cache=F}
 n=1000
 listallposterior=lapply(allexpe,function(e)
                         {
