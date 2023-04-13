@@ -37,10 +37,8 @@ diffuse_culture <- function(g, prob_diffuse) {
         neighbors <- neighbors(g, v)
         probas=1/(E(g)[.from(v)]$weight+1)^2
         visit <- sample(neighbors, 1,prob=probas)
-        #message(paste("probas:",length(probas),"neighbors:", length(neighbors)))
-        #message(paste("visit:",visit))
         if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- 10
-        }
+    }
   V(g)$state[V(g)$state==1]=-1
   V(g)$state[V(g)$state>0]=V(g)$state[V(g)$state>0]-1
   V(g)$color=ifelse(V(g)$state==0,1,2)
@@ -57,7 +55,7 @@ scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), create
 
 n=30
 plot(0,0,xlim=c(-1,1),ylim=c(-1,1),type="n",ann=F,axes=F)
-plot(createFringePoints(.3,n),add=T,pch=21,bg="red")
+plot(createFringePoints(.6,100),add=T,pch=21,bg="red")
 plot(createPolyPoints(h=1,n=n),add=T,pch=21,bg="red")
 plot(createPolyPoints(h=.5,n=n),add=T,pch=21,bg="red")
 
@@ -69,7 +67,8 @@ graphs=lapply(scenarios,toGraph)
 # Run diffusion simulation for 10 time steps
 prob_diffuse <- .5
 par(mfrow=c(1,3))
-for (i in 1:25) {
+par(mar=c(0,0,0,0))
+for (t in 1:25) {
     #update 3 scenarios
     graphs=lapply(graphs, diffuse_culture,prob_diffuse=prob_diffuse)
     #plots 3 scenarios
@@ -81,6 +80,11 @@ for (i in 1:25) {
 }
 plot(graphs[[1]],layout=st_coordinates(scenarios[[1]]))
 plot(g1,layout=st_coordinates(scenarios[[1]]))
+
+
+dev.new()
+boxplot(t(bigg))
+
 
 a=Sys.time()
 graphs=lapply(scenarios,toGraph)
