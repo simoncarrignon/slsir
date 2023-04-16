@@ -36,7 +36,7 @@ createFringePoints <- function(m,n){
     circle_poly_coords <- center + radius * cbind(cos(theta), sin(theta))
     circle_poly2 <- st_polygon(list(rbind(circle_poly_coords, circle_poly_coords[1,])))
     fringe=st_difference(circle_poly1,circle_poly2)
-    st_sample(fringe,size = 50,type="hexagonal")
+    st_sample(fringe,size = n,type="hexagonal")
 }
 
 
@@ -86,7 +86,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
   return(g)
 }
 
-n=30
+n=50
 
 #let's draw 3 maps
 
@@ -114,16 +114,21 @@ for (t in 1:25) {
                plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
                plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
                 })
-               Sys.sleep(1)
+               #Sys.sleep(1)
 }
 
 
 #Final result after 25 time step:
+pdf("network.pdf",width=12,height=4)
+
 par(mfrow=c(1,3))
+par(mar=c(0,0,0,0))
 for(i in 1:3){
     plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
     plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
 }
+dev.off()
+
 
 
 #reset the state of the graph:
@@ -138,7 +143,7 @@ library(parallel)
 
 cl <- makeCluster(10,type="FORK")
 #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
-bigg=parSapply(cl,1:3000,function(i){print(i);sapply(graphs,function(gt){ t=0; while(sum(V(gt)$state>2) ){gt=diffuse_culture(gt,prob_diffuse);t=t+1}; return(t) })})
+bigg=parSapply(cl,1:3000,function(i){print(i);sapply(graphs,function(gt){ t=0; while(sum(V(gt)$state>0)<25 ){gt=diffuse_culture(gt,prob_diffuse);t=t+1}; return(t) })})
 stopCluster(cl)
 
 
