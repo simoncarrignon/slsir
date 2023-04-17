@@ -74,7 +74,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
     #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
     for (v in V(g)[V(g)$state>0]) {
         neighbors <- neighbors(g, v) #get all the neighbors of the node v
-        probas=1/(E(g)[.from(v)]$weight+1)^2    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        probas=1/(E(g)[.from(v)]$weight+1)^4    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
         visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
         if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
     }
@@ -103,10 +103,10 @@ for(i in 1:3){
 graphs=lapply(scenarios,toGraph)
 
 # Run diffusion simulation for 25 time steps on each graph
-prob_diffuse <- .5
+prob_diffuse <- .1
 par(mfrow=c(1,3))
 par(mar=c(0,0,0,0))
-for (t in 1:25) {
+for (t in 1:500) {
     #update 3 scenarios
     graphs=lapply(graphs, diffuse_culture,prob_diffuse=prob_diffuse)
     #plots 3 scenarios
@@ -132,7 +132,6 @@ dev.off()
 
 
 #reset the state of the graph:
-graphs=lapply(scenarios,toGraph)
 
 
 # below example to run in parallel multiple runs
@@ -141,10 +140,21 @@ graphs=lapply(scenarios,toGraph)
 #run multiple simulation
 library(parallel)
 
-cl <- makeCluster(10,type="FORK")
-#below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
-bigg=parSapply(cl,1:3000,function(i){print(i);sapply(graphs,function(gt){ t=0; while(sum(V(gt)$state>0)<25 ){gt=diffuse_culture(gt,prob_diffuse);t=t+1}; return(t) })})
-stopCluster(cl)
+
+for(n in c(50,200)){
+    for(prob_diffuse in c(.25,.5)){
+        scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+        graphs=lapply(scenarios,toGraph)
+
+        st=Sys.time()
+        cl <- makeCluster(10,type="FORK")
+        #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
+        bigg=parSapply(cl,1:1000,function(i){print(i);lapply(graphs,function(gt){ t=0; crve=c();while( sum(V(gt)$state<0)<.9*n && t < 500 ){gt=diffuse_culture(gt,prob_diffuse);t=t+1;ni=sum(V(gt)$state>0); crve=c(crve,ni)}; return(list(t,crve)) })})
+        saveRDS(file=paste0("result_good_n",n,"_p",prob_diffuse,".rds"),bigg)
+        stopCluster(cl)
+        print(Sys.time()-st)
+    }
+}
 
 
 boxplot(t(bigg))
