@@ -74,7 +74,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
     #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
     for (v in V(g)[V(g)$state>0]) {
         neighbors <- neighbors(g, v) #get all the neighbors of the node v
-        probas=1/(E(g)[.from(v)]$weight+1)^2    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        probas=1/(E(g)[.from(v)]$weight+1)^4    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
         visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
         if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
     }
@@ -90,7 +90,7 @@ n=50
 
 #let's draw 3 maps
 
-scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+scenarios <- list( createFringePoints(.1,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
 
 par(mfrow=c(1,3))
 for(i in 1:3){
@@ -114,7 +114,7 @@ for (t in 1:25) {
                plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
                plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
                 })
-               #Sys.sleep(1)
+               Sys.sleep(1)
 }
 
 
