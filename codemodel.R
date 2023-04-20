@@ -90,7 +90,7 @@ n=50
 
 #let's draw 3 maps
 
-scenarios <- list( createFringePoints(.1,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
 
 par(mfrow=c(1,3))
 for(i in 1:3){
@@ -114,12 +114,12 @@ for (t in 1:500) {
                plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
                plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
                 })
-               Sys.sleep(1)
+               #Sys.sleep(1)
 }
 
 
 #Final result after 25 time step:
-pdf("network.pdf",width=12,height=4)
+pdf("network.pdf",width=24,height=8)
 
 par(mfrow=c(1,3))
 par(mar=c(0,0,0,0))
