@@ -74,7 +74,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
     #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
     for (v in V(g)[V(g)$state>0]) {
         neighbors <- neighbors(g, v) #get all the neighbors of the node v
-        probas=1/(E(g)[.from(v)]$weight+1)^4    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        probas=1/((E(g)[.from(v)]$weight+1)^4)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
         visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
         if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
     }
@@ -86,7 +86,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
   return(g)
 }
 
-n=50
+n=2000
 
 #let's draw 3 maps
 
@@ -103,18 +103,21 @@ for(i in 1:3){
 graphs=lapply(scenarios,toGraph)
 
 # Run diffusion simulation for 25 time steps on each graph
-prob_diffuse <- .1
+prob_diffuse <- .5
 par(mfrow=c(1,3))
 par(mar=c(0,0,0,0))
 for (t in 1:500) {
+    st=Sys.time()
     #update 3 scenarios
     graphs=lapply(graphs, diffuse_culture,prob_diffuse=prob_diffuse)
+    print(Sys.time()-st)
     #plots 3 scenarios
     lapply(1:length(graphs),function(i){
                plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
-               plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
-                })
-               #Sys.sleep(1)
+               plot(scenarios[[i]],bg=ifelse(V(graphs[[i]])$state==0,0,2),add=T,pch=21)
+               #plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
+})
+    #Sys.sleep(1)
 }
 
 
