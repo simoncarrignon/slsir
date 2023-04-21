@@ -113,18 +113,20 @@ for (t in 1:500) {
     print(Sys.time()-st)
     #plots 3 scenarios
     lapply(1:length(graphs),function(i){
-               plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
-               st=V(graphs[[i]])$state
-               cl=st
-               cl[st==0]=0
-               cl[st>0]=2
-               cl[st<0]="blue"
-               plot(scenarios[[i]],bg=cl,add=T,pch=21)
-               #plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
+               plotgraph(graphs[[i]],scenarios[[i]]))
 })
     #Sys.sleep(1)
 }
 
+plotgraph <- function(network,layout){
+    plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
+    st=V(network)$state
+    cl=st
+    cl[st==0]=0
+    cl[st>0]=2
+    cl[st<0]="blue"
+    plot(layout,bg=cl,add=T,pch=21)
+}
 
 #Final result after 25 time step:
 pdf("network.pdf",width=24,height=8)
