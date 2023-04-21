@@ -144,16 +144,16 @@ dev.off()
 library(parallel)
 
 
-for(n in c(50,200)){
-    for(prob_diffuse in c(.25,.5)){
+for(n in c(100,1000)){
+    for(prob_diffuse in c(.1)){
         scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
         graphs=lapply(scenarios,toGraph)
 
         st=Sys.time()
-        cl <- makeCluster(10,type="FORK")
+        cl <- makeCluster(40,type="FORK")
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
-        bigg=parSapply(cl,1:1000,function(i){print(i);lapply(graphs,function(gt){ t=0; crve=c();while( sum(V(gt)$state<0)<.9*n && t < 500 ){gt=diffuse_culture(gt,prob_diffuse);t=t+1;ni=sum(V(gt)$state>0); crve=c(crve,ni)}; return(list(t,crve)) })})
-        saveRDS(file=paste0("result_good_n",n,"_p",prob_diffuse,".rds"),bigg)
+        bigg=parSapply(cl,1:200,function(i){print(i);lapply(graphs,function(gt){ t=0; crve=c();while( sum(V(gt)$state<0)<.99*n && t < 1500 ){gt=diffuse_culture(gt,prob_diffuse);t=t+1;ni=sum(V(gt)$state>0); crve=c(crve,ni)}; return(list(t,crve)) })})
+        saveRDS(file=paste0("result_goodbis_n",n,"_p",prob_diffuse,".rds"),bigg)
         stopCluster(cl)
         print(Sys.time()-st)
     }
