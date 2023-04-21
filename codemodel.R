@@ -114,7 +114,12 @@ for (t in 1:500) {
     #plots 3 scenarios
     lapply(1:length(graphs),function(i){
                plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
-               plot(scenarios[[i]],bg=ifelse(V(graphs[[i]])$state==0,0,2),add=T,pch=21)
+               st=V(graphs[[i]])$state
+               cl=st
+               cl[st==0]=0
+               cl[st>0]=2
+               cl[st<0]="blue"
+               plot(scenarios[[i]],bg=cl,add=T,pch=21)
                #plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
 })
     #Sys.sleep(1)
