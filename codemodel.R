@@ -151,39 +151,45 @@ dev.off()
 library(parallel)
 
 
-for(n in c(50,100,500,1000)){
-    for(prob_diffuse in c(.2,.3,.5)){
+for(n in c(50,100)){
+    for(prob_diffuse in c(.2,.3)){
         scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
         graphs=lapply(scenarios,toGraph)
 
         st=Sys.time()
-        cl <- makeCluster(30,type="FORK")
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
-        bigg=parLapply(cl,1:200,function(i){
-                           print(i);
-                           lapply(seq_along(graphs),function(g)
-                                           { 
-                                               gt=graphs[[g]]
-                                               t=0; crve=c();
-                                               while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
-                                                   if(i%%50==1){
-                                                       png(sprintf("N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
-                                                       par(mar=c(0,0,0,0))
-                                                   }
-                                                   plotgraph(gt,scenarios[[g]],lwd=.6)
-                                                   gt=diffuse_culture(gt,prob_diffuse);
-                                                   t=t+1;
-                                                   ni=sum(V(gt)$state>0); 
-                                                   crve=c(crve,ni)
-                                                   if(i%%50==1){
-                                                       dev.off()
-                                                   }
-                                               };
-                                               return(list(t,crve)) 
-                                           })
-        })
-        saveRDS(file=paste0("result_gis_n",n,"_p",prob_diffuse,".rds"),bigg)
+        cl <- makeCluster(4)
+        bigg=lapply(seq_along(graphs),function(g)
+                    { 
+                        parLapply(cl,1:10,function(i,g,graphs,n,prob_diffuse,diffuse_culture){
+
+                                      library(igraph)
+                                      #lapply(1:10,function(i){
+                                      print(i);
+                                      gt=graphs[[g]]
+                                      t=0;
+                                      crve=c();
+                                      while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
+                                          #if(i%%50==1){
+                                          #    png(sprintf("N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                          #    par(mar=c(0,0,0,0))
+
+                                          # plotgraph(gt,scenarios[[g]],lwd=.6)
+                                          #}
+                                          gt=diffuse_culture(gt,prob_diffuse);
+                                          t=t+1;
+                                          ni=sum(V(gt)$state>0); 
+                                          crve=c(crve,ni)
+                                          #if(i%%50==1){
+                                          #    dev.off()
+                                          #}
+                                      };
+                                      print(crve)
+                                      return(list(t,crve)) 
+               },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture)
+                    })
         stopCluster(cl)
+        saveRDS(file=paste0("result_gis_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
 }
