@@ -118,14 +118,14 @@ for (t in 1:500) {
     #Sys.sleep(1)
 }
 
-plotgraph <- function(network,layout){
+plotgraph <- function(network,layout,...){
     plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
     st=V(network)$state
     cl=st
     cl[st==0]=0
     cl[st>0]=2
     cl[st<0]="blue"
-    plot(layout,bg=cl,add=T,pch=21)
+    plot(layout,bg=cl,add=T,pch=21,...)
 }
 
 #Final result after 25 time step:
@@ -151,16 +151,38 @@ dev.off()
 library(parallel)
 
 
-for(n in c(100,1000)){
-    for(prob_diffuse in c(.1)){
+for(n in c(50,100,500,1000)){
+    for(prob_diffuse in c(.2,.3,.5)){
         scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
         graphs=lapply(scenarios,toGraph)
 
         st=Sys.time()
-        cl <- makeCluster(40,type="FORK")
+        cl <- makeCluster(30,type="FORK")
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
-        bigg=parSapply(cl,1:200,function(i){print(i);lapply(graphs,function(gt){ t=0; crve=c();while( sum(V(gt)$state<0)<.99*n && t < 1500 ){gt=diffuse_culture(gt,prob_diffuse);t=t+1;ni=sum(V(gt)$state>0); crve=c(crve,ni)}; return(list(t,crve)) })})
-        saveRDS(file=paste0("result_goodbis_n",n,"_p",prob_diffuse,".rds"),bigg)
+        bigg=parLapply(cl,1:200,function(i){
+                           print(i);
+                           lapply(seq_along(graphs),function(g)
+                                           { 
+                                               gt=graphs[[g]]
+                                               t=0; crve=c();
+                                               while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
+                                                   if(i%%50==1){
+                                                       png(sprintf("N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                                       par(mar=c(0,0,0,0))
+                                                   }
+                                                   plotgraph(gt,scenarios[[g]],lwd=.6)
+                                                   gt=diffuse_culture(gt,prob_diffuse);
+                                                   t=t+1;
+                                                   ni=sum(V(gt)$state>0); 
+                                                   crve=c(crve,ni)
+                                                   if(i%%50==1){
+                                                       dev.off()
+                                                   }
+                                               };
+                                               return(list(t,crve)) 
+                                           })
+        })
+        saveRDS(file=paste0("result_gis_n",n,"_p",prob_diffuse,".rds"),bigg)
         stopCluster(cl)
         print(Sys.time()-st)
     }
