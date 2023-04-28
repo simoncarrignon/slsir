@@ -151,17 +151,17 @@ dev.off()
 library(parallel)
 
 
-for(n in c(50,100)){
-    for(prob_diffuse in c(.2,.3)){
+for(n in c(50,100,500,1000)){
+    for(prob_diffuse in c(.2,.4,.6)){
         scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
         graphs=lapply(scenarios,toGraph)
 
         st=Sys.time()
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
-        cl <- makeCluster(4)
+        cl <- makeCluster(40)
         bigg=lapply(seq_along(graphs),function(g)
                     { 
-                        parLapply(cl,1:10,function(i,g,graphs,n,prob_diffuse,diffuse_culture){
+                        parLapply(cl,1:200,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
 
                                       library(igraph)
                                       #lapply(1:10,function(i){
@@ -174,7 +174,7 @@ for(n in c(50,100)){
                                           #    png(sprintf("N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
                                           #    par(mar=c(0,0,0,0))
 
-                                          # plotgraph(gt,scenarios[[g]],lwd=.6)
+                                          #    plotgraph(gt,scenarios[[g]],lwd=.6)
                                           #}
                                           gt=diffuse_culture(gt,prob_diffuse);
                                           t=t+1;
@@ -186,10 +186,10 @@ for(n in c(50,100)){
                                       };
                                       print(crve)
                                       return(list(t,crve)) 
-               },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture)
+               },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture,plotgraph=plotgraph,scenarios=scenarios)
                     })
         stopCluster(cl)
-        saveRDS(file=paste0("result_gis_n",n,"_p",prob_diffuse,".rds"),bigg)
+        saveRDS(file=paste0("result_tis_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
 }
