@@ -101,6 +101,8 @@ for(i in 1:3){
 
 # convert these maps as graph where we will run the simulation:
 graphs=lapply(scenarios,toGraph)
+graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>1]))
+
 
 # Run diffusion simulation for 25 time steps on each graph
 prob_diffuse <- .5
@@ -161,35 +163,36 @@ for(n in c(50,100,500,1000)){
         cl <- makeCluster(40)
         bigg=lapply(seq_along(graphs),function(g)
                     { 
-                        parLapply(cl,1:200,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
+                        parLapply(cl,1:400,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
 
                                       library(igraph)
+                                      library(sf)
                                       #lapply(1:10,function(i){
                                       print(i);
                                       gt=graphs[[g]]
                                       t=0;
                                       crve=c();
                                       while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
-                                          #if(i%%50==1){
-                                          #    png(sprintf("N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
-                                          #    par(mar=c(0,0,0,0))
+                                          if(i%%100==1){
+                                              png(sprintf("limited_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                              par(mar=c(0,0,0,0))
+                                              plotgraph(gt,scenarios[[g]],lwd=.6)
 
-                                          #    plotgraph(gt,scenarios[[g]],lwd=.6)
-                                          #}
+                                          }
                                           gt=diffuse_culture(gt,prob_diffuse);
                                           t=t+1;
                                           ni=sum(V(gt)$state>0); 
                                           crve=c(crve,ni)
-                                          #if(i%%50==1){
-                                          #    dev.off()
-                                          #}
+                                          if(i%%100==1){
+                                              dev.off()
+                                          }
                                       };
                                       print(crve)
                                       return(list(t,crve)) 
                },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture,plotgraph=plotgraph,scenarios=scenarios)
                     })
         stopCluster(cl)
-        saveRDS(file=paste0("result_tis_n",n,"_p",prob_diffuse,".rds"),bigg)
+        saveRDS(file=paste0("result_limitedtri_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
 }
