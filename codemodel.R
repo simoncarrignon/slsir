@@ -102,6 +102,8 @@ for(i in 1:3){
 # convert these maps as graph where we will run the simulation:
 graphs=lapply(scenarios,toGraph)
 graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>1]))
+saveRDS(file="limitednetwork.RDS",graphs)
+
 
 
 # Run diffusion simulation for 25 time steps on each graph
@@ -197,5 +199,3 @@ for(n in c(50,100,500,1000)){
     }
 }
 
-
-boxplot(t(bigg))
