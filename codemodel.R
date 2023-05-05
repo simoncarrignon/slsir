@@ -86,7 +86,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
   return(g)
 }
 
-n=2000
+n=200
 
 #let's draw 3 maps
 
@@ -101,7 +101,8 @@ for(i in 1:3){
 
 # convert these maps as graph where we will run the simulation:
 graphs=lapply(scenarios,toGraph)
-graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>1]))
+graphs=lapply(graphs,function(g){V(g)$size=5;g})
+graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 saveRDS(file="limitednetwork.RDS",graphs)
 
 
@@ -134,12 +135,14 @@ plotgraph <- function(network,layout,...){
 
 #Final result after 25 time step:
 pdf("network.pdf",width=24,height=8)
-
 par(mfrow=c(1,3))
 par(mar=c(0,0,0,0))
 for(i in 1:3){
     plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
-    plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
+    g=graphs[[i]]
+    V(g)$color=adjustcolor(categorical_pal(3)[i],.6)
+    E(g)$width=E(g)$width/4
+    plot(g,layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
 }
 dev.off()
 
