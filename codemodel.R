@@ -25,15 +25,14 @@ createPolyPoints <- function(h,v=0,n){
 #' 
 #' @importFrom sf st_polygon st_sample st_difference
 #' @export
-createFringePoints <- function(m,n){
+createFringePoints <- function(m,n,r= 0.92){
     # create circle polygon inside the square polygon
     center <- c(0, 0)
-    radius <- 0.92
     theta <- seq(0, 2*pi, length.out = 50+1)[-1] # create n points evenly spaced around the circle
-    circle_poly_coords <- center + radius * cbind(cos(theta), sin(theta))
+    circle_poly_coords <- center + r * cbind(cos(theta), sin(theta))
     circle_poly1 <- st_polygon(list(rbind(circle_poly_coords, circle_poly_coords[1,])))
-    radius <- radius-m 
-    circle_poly_coords <- center + radius * cbind(cos(theta), sin(theta))
+    r <- r-m 
+    circle_poly_coords <- center + r * cbind(cos(theta), sin(theta))
     circle_poly2 <- st_polygon(list(rbind(circle_poly_coords, circle_poly_coords[1,])))
     fringe=st_difference(circle_poly1,circle_poly2)
     st_sample(fringe,size = n,type="hexagonal")
@@ -86,22 +85,26 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
   return(g)
 }
 
-n=2000
+n=3000
 
 #let's draw 3 maps
 
-scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+scenarios <- list( createFringePoints(.3,n,r=3), createPolyPoints(h=3,n=n), createPolyPoints(h=1.5,n=n))
 
 par(mfrow=c(1,3))
 for(i in 1:3){
-    plot(0,0,xlim=c(-1,1),ylim=c(-1,1),type="n",ann=F,axes=F)
+    plot(0,0,xlim=c(-3.1,3.1),ylim=c(-3.1,3.1),type="n",ann=F,axes=F)
     plot(scenarios[[i]],add=T,pch=21,bg="red")
 }
+par(mar=c(0,0,0,0),oma=c(0,0,0,0))
+plot(0,0,xlim=c(-3.1,3.1),ylim=c(-3.1,3.1),type="n",ann=F,axes=F)
+lapply(1:3,function(i)plot(st_convex_hull(st_union(scenarios[[i]])),col=adjustcolor(categorical_pal(3)[i],.9),add=T))
 
 
 # convert these maps as graph where we will run the simulation:
 graphs=lapply(scenarios,toGraph)
-graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>1]))
+graphs=lapply(graphs,function(g){V(g)$size=5;g})
+graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 saveRDS(file="limitednetwork.RDS",graphs)
 
 
@@ -134,12 +137,14 @@ plotgraph <- function(network,layout,...){
 
 #Final result after 25 time step:
 pdf("network.pdf",width=24,height=8)
-
 par(mfrow=c(1,3))
 par(mar=c(0,0,0,0))
 for(i in 1:3){
     plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
-    plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
+    g=graphs[[i]]
+    V(g)$color=adjustcolor(categorical_pal(3)[i],.6)
+    E(g)$width=E(g)$width/4
+    plot(g,layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
 }
 dev.off()
 
