@@ -25,15 +25,14 @@ createPolyPoints <- function(h,v=0,n){
 #' 
 #' @importFrom sf st_polygon st_sample st_difference
 #' @export
-createFringePoints <- function(m,n){
+createFringePoints <- function(m,n,r= 0.92){
     # create circle polygon inside the square polygon
     center <- c(0, 0)
-    radius <- 0.92
     theta <- seq(0, 2*pi, length.out = 50+1)[-1] # create n points evenly spaced around the circle
-    circle_poly_coords <- center + radius * cbind(cos(theta), sin(theta))
+    circle_poly_coords <- center + r * cbind(cos(theta), sin(theta))
     circle_poly1 <- st_polygon(list(rbind(circle_poly_coords, circle_poly_coords[1,])))
-    radius <- radius-m 
-    circle_poly_coords <- center + radius * cbind(cos(theta), sin(theta))
+    r <- r-m 
+    circle_poly_coords <- center + r * cbind(cos(theta), sin(theta))
     circle_poly2 <- st_polygon(list(rbind(circle_poly_coords, circle_poly_coords[1,])))
     fringe=st_difference(circle_poly1,circle_poly2)
     st_sample(fringe,size = n,type="hexagonal")
@@ -90,11 +89,11 @@ n=200
 
 #let's draw 3 maps
 
-scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=3,n=n), createPolyPoints(h=1.5,n=n))
 
 par(mfrow=c(1,3))
 for(i in 1:3){
-    plot(0,0,xlim=c(-1,1),ylim=c(-1,1),type="n",ann=F,axes=F)
+    plot(0,0,xlim=c(-2.5,2.5),ylim=c(-2.5,2.5),type="n",ann=F,axes=F)
     plot(scenarios[[i]],add=T,pch=21,bg="red")
 }
 
