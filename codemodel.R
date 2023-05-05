@@ -159,13 +159,14 @@ for(n in c(50,100,500,1000)){
     for(prob_diffuse in c(.2,.4,.6)){
         scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
         graphs=lapply(scenarios,toGraph)
+        graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 
         st=Sys.time()
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
         cl <- makeCluster(40)
         bigg=lapply(seq_along(graphs),function(g)
                     { 
-                        parLapply(cl,1:400,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
+                        parLapply(cl,1:200,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
 
                                       library(igraph)
                                       library(sf)
@@ -175,8 +176,8 @@ for(n in c(50,100,500,1000)){
                                       t=0;
                                       crve=c();
                                       while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
-                                          if(i%%100==1){
-                                              png(sprintf("limited_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                          if(i%%99==1){
+                                              png(sprintf("limconnHarder_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
                                               par(mar=c(0,0,0,0))
                                               plotgraph(gt,scenarios[[g]],lwd=.6)
 
@@ -185,7 +186,7 @@ for(n in c(50,100,500,1000)){
                                           t=t+1;
                                           ni=sum(V(gt)$state>0); 
                                           crve=c(crve,ni)
-                                          if(i%%100==1){
+                                          if(i%%99==1){
                                               dev.off()
                                           }
                                       };
@@ -194,7 +195,7 @@ for(n in c(50,100,500,1000)){
                },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture,plotgraph=plotgraph,scenarios=scenarios)
                     })
         stopCluster(cl)
-        saveRDS(file=paste0("result_limitedtri_n",n,"_p",prob_diffuse,".rds"),bigg)
+        saveRDS(file=paste0("result_limitedharder_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
 }
