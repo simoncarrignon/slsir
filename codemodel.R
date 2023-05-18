@@ -89,7 +89,7 @@ n=3000
 
 #let's draw 3 maps
 
-scenarios <- list( createFringePoints(.3,n,r=3), createPolyPoints(h=3,n=n), createPolyPoints(h=1.5,n=n))
+scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=1.5,n=n), createPolyPoints(h=0.75,n=n))
 
 par(mfrow=c(1,3))
 for(i in 1:3){
@@ -160,9 +160,9 @@ dev.off()
 library(parallel)
 
 
-for(n in c(50,100,500,1000)){
+for(n in c(300,3000)){
     for(prob_diffuse in c(.2,.4,.6)){
-        scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+        scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=1.5,n=n), createPolyPoints(h=0.75,n=n))
         graphs=lapply(scenarios,toGraph)
         graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 
@@ -182,7 +182,7 @@ for(n in c(50,100,500,1000)){
                                       crve=c();
                                       while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
                                           if(i%%99==1){
-                                              png(sprintf("limconnHarder_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                              png(sprintf("standard_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
                                               par(mar=c(0,0,0,0))
                                               plotgraph(gt,scenarios[[g]],lwd=.6)
 
@@ -200,7 +200,7 @@ for(n in c(50,100,500,1000)){
                },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture,plotgraph=plotgraph,scenarios=scenarios)
                     })
         stopCluster(cl)
-        saveRDS(file=paste0("result_limitedharder_n",n,"_p",prob_diffuse,".rds"),bigg)
+        saveRDS(file=paste0("result_standard_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
 }
