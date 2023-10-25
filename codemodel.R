@@ -73,7 +73,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
     #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
     for (v in V(g)[V(g)$state>0]) {
         neighbors <- neighbors(g, v) #get all the neighbors of the node v
-        probas=1/((E(g)[.from(v)]$weight+1)^4)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        probas=1/((E(g)[.from(v)]$weight+1)^2)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
         visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
         if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
     }
@@ -196,5 +196,22 @@ for(n in c(50,100,500,1000)){
         saveRDS(file=paste0("result_limitedtri_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
+}
+
+diffuse_culture_cluster <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
+
+    #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
+    for (v in V(g)[V(g)$state>0]) {
+        neighbors <- neighbors(g, v) #get all the neighbors of the node v
+        probas=1/((E(g)[.from(v)]$weight+1)^2)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
+        if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
+    }
+  V(g)$state[V(g)$state==1]=-1 #here I decided that once individual are going to be not contagious again I put them in a "resistant" stat, so they won't be contaminated again. We could imagine this resistant state to be also -n and then at each time state we can increase this resistance ; when it reaches 0 they can be contaminated again 
+  V(g)$state[V(g)$state>0]=V(g)$state[V(g)$state>0]-1 #decrease the time left for contagious people
+  V(g)$color[V(g)$state==0]=1 #just some estetic
+  V(g)$color[V(g)$state>0]=3 #just some estetic
+  V(g)$color[V(g)$state<0]=2 #just some estetic
+  return(g)
 }
 
