@@ -85,22 +85,26 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
   return(g)
 }
 
-n=2000
+n=3000
 
 #let's draw 3 maps
 
-scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=3,n=n), createPolyPoints(h=1.5,n=n))
+scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=1.5,n=n), createPolyPoints(h=0.75,n=n))
 
 par(mfrow=c(1,3))
 for(i in 1:3){
-    plot(0,0,xlim=c(-2.5,2.5),ylim=c(-2.5,2.5),type="n",ann=F,axes=F)
+    plot(0,0,xlim=c(-3.1,3.1),ylim=c(-3.1,3.1),type="n",ann=F,axes=F)
     plot(scenarios[[i]],add=T,pch=21,bg="red")
 }
+par(mar=c(0,0,0,0),oma=c(0,0,0,0))
+plot(0,0,xlim=c(-3.1,3.1),ylim=c(-3.1,3.1),type="n",ann=F,axes=F)
+lapply(1:3,function(i)plot(st_convex_hull(st_union(scenarios[[i]])),col=adjustcolor(categorical_pal(3)[i],.9),add=T))
 
 
 # convert these maps as graph where we will run the simulation:
 graphs=lapply(scenarios,toGraph)
-graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>1]))
+graphs=lapply(graphs,function(g){V(g)$size=5;g})
+graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 saveRDS(file="limitednetwork.RDS",graphs)
 
 
@@ -133,12 +137,14 @@ plotgraph <- function(network,layout,...){
 
 #Final result after 25 time step:
 pdf("network.pdf",width=24,height=8)
-
 par(mfrow=c(1,3))
 par(mar=c(0,0,0,0))
 for(i in 1:3){
     plot(0,0,xlim=c(-1.5,1.5),ylim=c(-1.5,1.5),type="n",ann=F,axes=F)
-    plot(graphs[[i]],layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
+    g=graphs[[i]]
+    V(g)$color=adjustcolor(categorical_pal(3)[i],.6)
+    E(g)$width=E(g)$width/4
+    plot(g,layout=st_coordinates(scenarios[[i]]),add=T,rescale=F)
 }
 dev.off()
 
@@ -154,17 +160,18 @@ dev.off()
 library(parallel)
 
 
-for(n in c(50,100,500,1000)){
+for(n in c(300,3000)){
     for(prob_diffuse in c(.2,.4,.6)){
-        scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+        scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=1.5,n=n), createPolyPoints(h=0.75,n=n))
         graphs=lapply(scenarios,toGraph)
+        graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 
         st=Sys.time()
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
         cl <- makeCluster(40)
         bigg=lapply(seq_along(graphs),function(g)
                     { 
-                        parLapply(cl,1:400,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
+                        parLapply(cl,1:200,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
 
                                       library(igraph)
                                       library(sf)
@@ -174,8 +181,8 @@ for(n in c(50,100,500,1000)){
                                       t=0;
                                       crve=c();
                                       while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
-                                          if(i%%100==1){
-                                              png(sprintf("limited_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                          if(i%%99==1){
+                                              png(sprintf("standard_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
                                               par(mar=c(0,0,0,0))
                                               plotgraph(gt,scenarios[[g]],lwd=.6)
 
@@ -184,7 +191,7 @@ for(n in c(50,100,500,1000)){
                                           t=t+1;
                                           ni=sum(V(gt)$state>0); 
                                           crve=c(crve,ni)
-                                          if(i%%100==1){
+                                          if(i%%99==1){
                                               dev.off()
                                           }
                                       };
@@ -193,7 +200,7 @@ for(n in c(50,100,500,1000)){
                },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture,plotgraph=plotgraph,scenarios=scenarios)
                     })
         stopCluster(cl)
-        saveRDS(file=paste0("result_limitedtri_n",n,"_p",prob_diffuse,".rds"),bigg)
+        saveRDS(file=paste0("result_standard_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
 }
