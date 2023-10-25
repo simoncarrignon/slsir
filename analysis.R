@@ -18,20 +18,29 @@ for(i in 1:3){
 dev.off()
 
 plot(1,1,xlim=c(0,100),ylim=c(0,800),type="n")
-for(i in 3:1)sapply(lapply(groupedresults[i,],"[[",2),lines,col=i+1)
-legend("topright",legend=paste0("layout ",1:3),lty=1,col=2:4)
+for(i in 3:1)sapply(lapply(groupedresults[i,],"[[",2),lines,col=categorical_pal(3)[i])
+legend("topright",legend=paste0("layout ",1:3),lty=1,col=categorical_pal(3))
 
 groupedresults=readRDS("result_goodbis_n1000_p0.5.rds")
-groupedresults=readRDS("result_limited_n50_p0.2.rds")
-groupedresultsb=readRDS("result_limitedbis_n50_p0.2.rds")
+groupedresults=readRDS("result_limited_n500_p0.6.rds")
+
+par(mfrow=c(2,3));
+for(n in c(300,3000)){
+threepro=lapply(c(2,4,6),function(p){
+groupedresults=readRDS(paste0("result_standard_n",n,"_p0.",p,".rds"))
 hpeak=sapply(groupedresults,function(o)sapply(o,function(i)max(i[[2]])))
-hpeakb=sapply(groupedresultsb,function(o)sapply(o,function(i)max(i[[2]])))
-hpeak=rbind(hpeak,hpeakb)
+started=apply(hpeak,2,function(i)which(i>10))
 tpeak=sapply(groupedresults,function(o)sapply(o,function(i)which.max(i[[2]])))
-tpeakb=sapply(groupedresultsb,function(o)sapply(o,function(i)which.max(i[[2]])))
-tpeak=rbind(tpeak,tpeakb)
-severity= hpeak/max(hpeak)*(1-tpeak/max(tpeak))
-par(mfrow=c(1,3));boxplot(hpeak,main="peak's height");boxplot(tpeak,main="time to peak");boxplot(severity,main="severity")
+severity= hpeak/max(unlist(hpeak))*(1-tpeak/max(tpeak))
+return(list(tpeak=tpeak,hpeak=hpeak,severity=severity))
+})
+
+binded=lapply(names(threepro[[1]]),function(n)do.call("cbind",lapply(threepro,"[[",n)))
+names(binded)=names(threepro[[1]])
+binded=lapply(binded,function(i)i[,c(1,4,7,2,5,8,3,6,9)])
+cls=rep(adjustcolor(categorical_pal(3),.6),c(3,3,3))
+boxplot(binded[["hpeak"]],main="peak's height",col=cls,axes=F);boxplot(binded[["tpeak"]],main="time to peak",col=cls,axes=F);boxplot(binded[["severity"]],main="severity",col=cls,,axes=F)
+}
 
 pdf("response_threelayout.pdf",width=12,height=7)
 par(mfrow=c(1,2))
@@ -49,7 +58,6 @@ for(i in 1:3){
 }
 dev.off()
 
-plot(1,1,xlim=c(0,50),ylim=c(0,100),type="n")
-for(i in 3:1)sapply(lapply(groupedresults[[i]],"[[",2),lines,col=adjustcolor(i+1,.1),lwd=2)
-legend("topright",legend=paste0("layout ",1:3),lty=1,col=2:4)
-boxplot(sapply(1:3,function(n)sapply(groupedresults[[n]],function(i)max(i[[2]])/which.max(i[[2]]))))
+plot(1,1,xlim=c(0,200),ylim=c(0,700),type="n",xlab="time",ylab="#contagious individuals")
+for(i in 3:1)sapply(lapply(groupedresults[[i]],"[[",2),lines,col=adjustcolor(categorical_pal(3)[i],.1),lwd=2)
+legend("topright",legend=paste0("layout ",1:3),lty=1,col=adjustcolor(categorical_pal(3),.8),lwd=2)
