@@ -57,9 +57,10 @@ allreas=as.numeric(st_area(tripillia))
 
 V(trip.graph)$type="H"
 V(trip.graph)$type[allreas>180]="M"
+fac= delete.edges(trip.graph,E(trip.graph)[E(trip.graph)$weight>800])
 
 plot(st_geometry(tripillia),lwd=.2,col="red")
-plot(st_geometry(tripillia)[as.numeric(allareas)>180],lwd=3,add=T,col="green")
+plot(st_geometry(tripillia)[as.numeric(allreas)>180],lwd=3,add=T,col="green")
 
 V(gt)[locals]$color=NULL
 u=1
@@ -74,16 +75,25 @@ for( meethouse in V(gt)[V(gt)$type=="M"]){
 
 gt=fac
 prob_diffuse = .2
-for(t in 1:100){
+t=0
+
+precomprob=list()
+for( house in V(gt)[V(gt)$type=="H"]){
+    pm=neighbors(gt, house)
+    pm=pm[pm$type=="M"]
+    probas=sapply(seq_along(pm),function(i)E(gt,P=c(house,pm[i]))$weight)
+    precomprob[[as.character(house)]]=probas
+}
+
+while( sum(V(gt)$state<0)<.90*n && t < 1500 && sum(V(gt)$state>0)>0 ){
     print(paste("step",t))
     V(gt)$comus=""
     allmeethouse=list()
-
     for( house in V(gt)[V(gt)$type=="H"]){
         pm=neighbors(gt, house)
         pm=pm[pm$type=="M"]
-        probas=sapply(seq_along(pm),function(i)E(gt,P=c(house,pm[i]))$weight)
-        meethouse=sample(pm,1,prob=1/(probas^2))
+        probas=precomprob[[as.character(house)]]
+        meethouse=sample(pm,1,prob=1/(probas^3))
         allmeethouse[[as.character(meethouse)]]=c(allmeethouse[[as.character(meethouse)]],house)
         V(gt)$comus[as.numeric(house)]=as.character(meethouse)
     }
@@ -92,17 +102,29 @@ for(t in 1:100){
     for(mt in allmeethouse){
         if(any(V(gt)[mt]$state>0)){
             infected=runif(length(mt))<prob_diffuse
-            V(gt)[mt]$state[infected]=10
+            ni=V(gt)[mt]$state==0
+            infect=ni & infected
+            V(gt)$state[mt][infect]=10
         }
 
     }
 
-    tripillia$epicol=V(gt)$state
+    V(gt)$state[V(gt)$state==1]=-1 
+    V(gt)$state[V(gt)$state>0]=V(gt)$state[V(gt)$state>0]-1 
+
+    tripillia$epicol="red"
+    tripillia$epicol=ifelse(V(gt)$state>0,"red","white")
     tripillia$comucol=V(gt)$comus
     png(sprintf("mh_tpl_t%04d.png",t),width=800,height=800)
-    plot(st_centroid(tripillia[,c("color","comucol")]),cex=5,pch=20,main=t)
+    plot(st_centroid(tripillia[,c("epicol","comucol")]),cex=2,pch=20,main=t,bgc="black")
+    dev.off()
+    png(sprintf("mh_tpl_bis_t%04d.png",t),width=800,height=800)
+    par(mfrow=c(1,2))
+    plot(st_coordinates(st_centroid(tripillia[,c("epicol","comucol")])),axes=F,ann=F,bg=tripillia$epicol,pch=21,cex=2)
+    plot(st_coordinates(st_centroid(tripillia[,c("epicol","comucol")])),axes=F,ann=F,bg=as.factor(tripillia$comucol),pch=21,cex=2)
     dev.off()
     print("done")
+    t=t+1
 }
 
-trip.graph(V(trip.graph)[1]
+TRIp.graph(V(trip.graph)[1]
