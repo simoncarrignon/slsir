@@ -73,7 +73,7 @@ diffuse_culture <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
     #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
     for (v in V(g)[V(g)$state>0]) {
         neighbors <- neighbors(g, v) #get all the neighbors of the node v
-        probas=1/((E(g)[.from(v)]$weight+1)^4)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        probas=1/((E(g)[.from(v)]$weight+1)^2)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
         visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
         if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
     }
@@ -163,17 +163,18 @@ dev.off()
 library(parallel)
 
 
-for(n in c(50,100,500,1000)){
+for(n in c(300,3000)){
     for(prob_diffuse in c(.2,.4,.6)){
-        scenarios <- list( createFringePoints(.3,n), createPolyPoints(h=1.5,n=n), createPolyPoints(h=.5,n=n))
+        scenarios <- list( createFringePoints(.3,n,r=1.5), createPolyPoints(h=1.5,n=n), createPolyPoints(h=0.75,n=n))
         graphs=lapply(scenarios,toGraph)
+        graphs=lapply(graphs,function(g)delete.edges(g,E(g)[E(g)$weight>.5]))
 
         st=Sys.time()
         #below the while loop run until only 2 individuals are still contagious and return the number of time step neede to do so.
         cl <- makeCluster(40)
         bigg=lapply(seq_along(graphs),function(g)
                     { 
-                        parLapply(cl,1:400,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
+                        parLapply(cl,1:200,function(i,g,graphs,n,prob_diffuse,diffuse_culture,plotgraph,scenarios){
 
                                       library(igraph)
                                       library(sf)
@@ -183,8 +184,8 @@ for(n in c(50,100,500,1000)){
                                       t=0;
                                       crve=c();
                                       while( sum(V(gt)$state<0)<.99*n && t < 1500 && sum(V(gt)$state>0)>0 ){
-                                          if(i%%100==1){
-                                              png(sprintf("limited_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
+                                          if(i%%99==1){
+                                              png(sprintf("standard_N%d_pd%d_r%d_layout%d_t%03d_b.png",n,prob_diffuse*10,i,g,t),width=700,height=700,pointsize=10)
                                               par(mar=c(0,0,0,0))
                                               plotgraph(gt,scenarios[[g]],lwd=.6)
 
@@ -193,7 +194,7 @@ for(n in c(50,100,500,1000)){
                                           t=t+1;
                                           ni=sum(V(gt)$state>0); 
                                           crve=c(crve,ni)
-                                          if(i%%100==1){
+                                          if(i%%99==1){
                                               dev.off()
                                           }
                                       };
@@ -202,8 +203,25 @@ for(n in c(50,100,500,1000)){
                },graphs=graphs,g=g,n=n,prob_diffuse=prob_diffuse,diffuse_culture=diffuse_culture,plotgraph=plotgraph,scenarios=scenarios)
                     })
         stopCluster(cl)
-        saveRDS(file=paste0("result_limitedtri_n",n,"_p",prob_diffuse,".rds"),bigg)
+        saveRDS(file=paste0("result_standard_n",n,"_p",prob_diffuse,".rds"),bigg)
         print(Sys.time()-st)
     }
+}
+
+diffuse_culture_cluster <- function(g, prob_diffuse,nvisits=1,contagious_period=10) {
+
+    #for all node in the graph of state > 0, which correspond to "contagious" individual we will see if they visit other indivdiual
+    for (v in V(g)[V(g)$state>0]) {
+        neighbors <- neighbors(g, v) #get all the neighbors of the node v
+        probas=1/((E(g)[.from(v)]$weight+1)^2)    #this is where the probablilty of visiting someone is defined, very important. Here it is defined as depending on the invert of the squared distance. I added + 1 on the distance because the spatial geography of the model is very small and distance are ofen <1 so adding one simplify 
+        visit <- sample(neighbors, 1,prob=probas)  #we sample the `nvisits` neighbors given these probability
+        if (V(g)$state[visit]==0 && runif(1) < prob_diffuse) V(g)$state[visit] <- contagious_period
+    }
+  V(g)$state[V(g)$state==1]=-1 #here I decided that once individual are going to be not contagious again I put them in a "resistant" stat, so they won't be contaminated again. We could imagine this resistant state to be also -n and then at each time state we can increase this resistance ; when it reaches 0 they can be contaminated again 
+  V(g)$state[V(g)$state>0]=V(g)$state[V(g)$state>0]-1 #decrease the time left for contagious people
+  V(g)$color[V(g)$state==0]=1 #just some estetic
+  V(g)$color[V(g)$state>0]=3 #just some estetic
+  V(g)$color[V(g)$state<0]=2 #just some estetic
+  return(g)
 }
 
